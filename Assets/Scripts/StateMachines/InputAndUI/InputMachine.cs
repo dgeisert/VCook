@@ -52,9 +52,6 @@ public class InputMachine: StateMachine {
 
 	public override void InstanceInitiate(StateMachine checkMachine){
 		InputMachine.instance = this;
-		if (thisCamera == null) {
-			thisCamera = GetComponent<Camera> ();
-		}
 		OVRTouchpad.Create ();
 		swipeUp = StateMaster.instance.inputUI;
 		swipeDown = StateMaster.instance.inputInteract;
@@ -193,7 +190,9 @@ public class InputMachine: StateMachine {
 			ADMIN.Load ();
 		}
 		Gaze (GetSightedPoint ());
-		currentState.InstanceUpdate (this);
+		if (currentState != null) {
+			currentState.InstanceUpdate (this);
+		}
 		if (InputMachine.instance != this) {
 			return;
 		}
