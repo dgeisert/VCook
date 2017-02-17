@@ -17,7 +17,7 @@ public class SceneLoadMachine : StateMachine {
 	}
 	public override void InstanceUpdate(StateMachine checkMachine){
 	}
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine){
+	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
 		InputMachine.instance.SetRoom (InputMachine.instance.myRoom);
 		InputMachine.instance.mainUI.SetActive (false);
 		InputMachine.instance.loadingUI.SetActive (true);

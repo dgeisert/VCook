@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Input_UI : InputMachine {
+public class Input_UI : HandMachine {
 
 	public override void CheckUpdate(StateMachine checkMachine){
 	}

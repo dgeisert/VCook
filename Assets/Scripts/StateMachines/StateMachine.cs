@@ -29,7 +29,7 @@ public class StateMachine: MonoBehaviour {
 	public virtual void EnterState(StateMachine checkMachine){}
 	public virtual void InstanceInitiate(StateMachine checkMachine){}
 	public virtual void InstanceUpdate(StateMachine checkMachine){}
-	public virtual void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine){}
+	public virtual void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){}
 	public virtual List<InputMachine> InstanceHover(){
 		return null;
 	}
@@ -72,10 +72,10 @@ public class StateMachine: MonoBehaviour {
 		InstanceUpdate (this);
 	}
 
-	public void Interact(GameObject obj, Vector3 point){
+	public void Interact(GameObject obj, Vector3 point, HandMachine hand){
 		if (GetComponent<StateMaster> () != null) {
 			return;
 		}
-		InstanceInteract(obj, point, this);
+		InstanceInteract(obj, point, this, hand);
 	}
 }

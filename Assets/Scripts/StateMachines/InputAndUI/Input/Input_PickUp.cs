@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Input_PickUp : InputMachine {
+public class Input_PickUp : HandMachine {
 
 	public override void CheckUpdate(StateMachine checkMachine){
 		//checkMachine.UpdateState (StateMaster.instance.animalRunningAway, checkMachine);
@@ -32,13 +32,16 @@ public class Input_PickUp : InputMachine {
 		if (obj == null) {
 			canInteract = false;
 		}
-		if (obj.GetComponentInParent<Ground> () != null) {
-			canInteract = false;
+		if (obj.GetComponentInParent<ItemMachine> () != null) {
+			canInteract = true;
 		}
-		if (obj.GetComponentInParent<StateMachine> () == null) {
-			canInteract = false;
+		if (obj.GetComponentInParent<SurfaceMachine> () != null) {
+			canInteract = true;//obj.GetComponentInParent<SurfaceMachine> ().heldItem != null;
 		}
-		canInteract = true;
 	}
-	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){}
+	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){
+		if (canInteract) {
+			obj.GetComponentInParent<StateMachine> ().Interact (obj, point, (HandMachine) checkMachine);
+		}
+	}
 }

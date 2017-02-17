@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Input_Gather: InputMachine {
+public class Input_Gather: HandMachine {
 
 	public override void CheckUpdate(StateMachine checkMachine){
 		//checkMachine.UpdateState (StateMaster.instance.animalRunningAway, checkMachine);
@@ -33,15 +33,11 @@ public class Input_Gather: InputMachine {
 			canInteract = false;
 			return;
 		}
-		if (obj.GetComponentInParent<PlantMachine> () != null) {
-			canInteract = true;
-			return;
-		}
 		canInteract = false;
 	}
 	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){
 		if (canInteract) {
-			Destroy(obj.GetComponentInParent<PlantMachine> ().gameObject);
+			
 		}
 	}
 }

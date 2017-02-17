@@ -27,7 +27,7 @@ public class AreaStartStateMachine : StateMachine {
 			eventSystem = (GameObject) Resources.Load("EventSystem", typeof(GameObject));
 		}
 		GameObject.Instantiate (eventSystem);
-		if (PlayerMachine.playerObject == null) {	
+		if (FindObjectOfType<PlayerMachine>() == null) {	
 			if (usedRig == null) {
 				usedRig = (GameObject) Resources.Load("UsedRig", typeof(GameObject));
 			}
@@ -36,6 +36,9 @@ public class AreaStartStateMachine : StateMachine {
 			GameObject go = (GameObject) GameObject.Instantiate (usedRig, startPosition, transform.rotation);
 			go.GetComponent<PlayerMachine> ().Initiate ();
 		} else {
+			if (PlayerMachine.instance == null) {
+				PlayerMachine.instance = FindObjectOfType<PlayerMachine> ();
+			}
 			PlayerMachine.instance.Initiate ();
 		}
 		StartCoroutine ("SetRooms");	

@@ -7,11 +7,12 @@ public class PlayerMachine : StateMachine {
 	public static GameObject playerObject;
 	public static PlayerMachine instance;
 	public InputMachine inputMachine;
+	public StateMaster stateMaster;
 	private Dictionary<string, int> resources;
 	private Dictionary<string, GameObject> loadedResources;
 
 	public override void InstanceInitiate(StateMachine checkMachine){
-		GetComponent<StateMaster> ().Setup ();
+		stateMaster.Setup ();
 		inputMachine.Initiate ();
 		PlayerMachine.playerObject = gameObject;
 		PlayerMachine.instance = this;
@@ -39,9 +40,6 @@ public class PlayerMachine : StateMachine {
 			transform.rotation = AreaStartStateMachine.instance.transform.rotation;
 		}
 		LoadGos ();
-		if (InputMachine.instance.gos.Count == 0) {
-			ADMIN.CreateGos ();
-		}
 	}
 
 	public int GetResource(string resource){

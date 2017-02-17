@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Input_Chop : InputMachine {
+public class Input_Chop : HandMachine {
 
 	public override void CheckUpdate(StateMachine checkMachine){
 		//checkMachine.UpdateState (StateMaster.instance.animalRunningAway, checkMachine);
@@ -31,32 +31,18 @@ public class Input_Chop : InputMachine {
 		if (obj == null) {
 			return;
 		}
-		TreeMachine tm = obj.GetComponentInParent<TreeMachine> ();
-		if (tm != null) {
-			canInteract = tm.CanChop ();
-			if (tm.CanChop ()) {
-				tm.timer.StartTimer (tm.chopTime, true, InputMachine.instance.reticle.getTimerLocation (), numbers: false);
-			}
-			return;
-		}
 	}
 	public override void CheckInteract(GameObject obj, Vector3 point, StateMachine checkMachine){
 		if (obj == null) {
 			canInteract = false;
 			return;
 		}
-		TreeMachine tm = obj.GetComponentInParent<TreeMachine> ();
-		if (tm != null) {
-			tm.Interact (obj, point);
-			canInteract = tm.CanChop ();
-			return;
-		}
 		canInteract = false;
 	}
 	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){
-		TimerObject tObj = InputMachine.instance.reticle.getTimerLocation ().GetComponentInChildren<TimerObject> ();
+		/*TimerObject tObj = InputMachine.instance.reticle.getTimerLocation ().GetComponentInChildren<TimerObject> ();
 		if (tObj != null) {
 			Destroy(tObj.gameObject);
-		}
+		}*/
 	}
 }

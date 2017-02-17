@@ -5,6 +5,7 @@ using System;
 public class Timer {
 
 	public DateTime timerStart;
+	public bool addativeTime = false;
 	public float timerDuration = 1f;
 	public TimerObject timerObject;
 	public StateMachine sm;

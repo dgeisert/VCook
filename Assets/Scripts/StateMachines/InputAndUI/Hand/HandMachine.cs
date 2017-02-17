@@ -1,22 +1,52 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.VR;
+using Holoville.HOTween;
 
-public class HandMachine : StateMachine {
+[System.Serializable]
+public enum Hand {
+	Right,
+	Left,
+	Headset
+}
 
-	public bool is_right = false;
-	public bool is_nearObjects = false, is_onGround;
+public class HandMachine : InputMachine {
+
+	[SerializeField] public Hand hand = Hand.Headset;
+	public ReticleMachine reticle;
+	public Transform raycastTransform, holdPosition;
+	public bool is_nearObjects = false, is_onGround, is_holding = false;
 	private InputMachine currentInteractionState;
 	private HandInstance handInstance;
+	public string trigger, grip, dpadX, dpadY, button1, button2, button3, button4;
 
-	void Start(){
-		Initiate ();
+	public GameObject blackout;
+	public SpriteRenderer blackoutDip;
+
+	public ItemMachine heldItem;
+	public float holdStart;
+	float lastSwipeTime;
+	bool is_swipe = false;
+
+	InputMachine GetCurrentState(){
+		return (InputMachine) currentState;
 	}
 
 	public override void InstanceInitiate(StateMachine checkMachine){
+		if (hand == Hand.Headset) {
+			HOTween.To (blackoutDip, 5f, new TweenParms ().Prop ("color", new Color (0f, 0f, 0f, 0f)));
+		}
+		else{
+			SetHand(StateMaster.instance.inputInteract);
+		}
+		if (reticle != null) {
+			reticle.Initiate ();
+		}
 	}
 
 	public void SetHand(InputMachine setValue){
+		reticle.SetReticle (setValue);
 		if (currentInteractionState == setValue) {
 			return;
 		}
@@ -24,23 +54,67 @@ public class HandMachine : StateMachine {
 			Destroy (handInstance.gameObject);
 		}
 		currentInteractionState = setValue;
-		if (is_right) {
-			GameObject newHand = (GameObject)GameObject.Instantiate (setValue.setRightHand, transform);
-			newHand.transform.localPosition = Vector3.zero;
-			newHand.transform.rotation = InputMachine.instance.transform.rotation;
-			handInstance = newHand.GetComponent<HandInstance> ();
-		} else {
-			GameObject newHand = (GameObject)GameObject.Instantiate (setValue.setLeftHand, transform);
-			newHand.transform.localPosition = Vector3.zero;
+		GameObject newHand = (GameObject)GameObject.Instantiate (Resources.Load ("Inputs/Hands/Primary/" + setValue.GetType().ToString()) as GameObject, transform.position, transform.rotation, transform);
+		if (handInstance != null) {
+			Destroy (handInstance.gameObject);
+		}
+		handInstance = newHand.GetComponent<HandInstance> ();
+		switch(hand){
+		case Hand.Right:
+			//set right
+			break;
+		case Hand.Left:
 			newHand.transform.localScale = new Vector3 (-1, 1, 1);
-			newHand.transform.rotation = InputMachine.instance.transform.rotation;
-			handInstance = newHand.GetComponent<HandInstance> ();
+			break;
+		default:
+			break;
+		}
+	}
+
+	KeyValuePair<Vector3, GameObject> GetSightedPoint(Transform raycastTransform){
+		RaycastHit hit;
+		Ray inputRay = new Ray(raycastTransform.position, raycastTransform.forward);
+		if (Physics.Raycast (inputRay, out hit, InputMachine.instance.maxDistance)) {
+			if (hit.transform != null) {
+				return new KeyValuePair<Vector3, GameObject> (hit.point, hit.transform.gameObject);
+			} else {
+				return new KeyValuePair<Vector3, GameObject> (transform.position + transform.forward * maxDistance, null);
+			}
+		} else {
+			return new KeyValuePair<Vector3, GameObject> (transform.position + transform.forward * maxDistance, null);
 		}
 	}
 
 	public override void InstanceUpdate(StateMachine checkMachine) {
+		KeyValuePair<Vector3, GameObject> kvp = GetSightedPoint (raycastTransform);
+		GameObject sightedObject = kvp.Value;
+		Vector3 sightedPoint = kvp.Key;
+		if (lastSwipeTime + 0.1f < Time.time) {
+			is_swipe = false;
+		}
+		if (reticle != null) {
+			reticle.Gaze (sightedPoint);
+		}
+		if (trigger != "") {
+			if (Input.GetAxis (trigger) > 0.5F) {
+				is_holding = true;
+				holdStart = Time.time;
+				GetCurrentState ().Tap (sightedObject, sightedPoint, this);
+			}
+			if (Input.GetAxis (trigger) < 0.5F && is_holding) {
+				is_holding = false;
+				if (!is_swipe) {
+					GetCurrentState ().Release (sightedObject, sightedPoint, this);
+				}
+			}
+		}
+		if (is_holding) {
+			GetCurrentState().CheckInteract (sightedObject, sightedPoint, this);
+		} else {
+			CheckInteractionChange (sightedObject);
+		}
 		if (handInstance != null) {
-			if (!InputMachine.instance.is_holding) {
+			if (!is_holding) {
 				handInstance.SetNoHold ();
 			} else {
 				if (currentInteractionState.canInteract) {
@@ -53,5 +127,87 @@ public class HandMachine : StateMachine {
 	}
 
 	public void OnTriggerStay(Collider col){
+	}
+
+	public void DipToColor(Color col, float duration){
+		StartCoroutine (DipToColorStart(col, duration));
+	}
+	IEnumerator DipToColorStart(Color col, float duration){
+		blackoutDip.gameObject.SetActive(true);
+		blackoutDip.color = new Color (col.r, col.g, col.b, 0f);
+		HOTween.To(blackoutDip, duration, new TweenParms().Prop("color", col));
+		yield return new WaitForSeconds (duration);
+		InputMachine.instance.CheckObjects ();
+		HOTween.To(blackoutDip, duration, new TweenParms().Prop("color", new Color(col.r, col.g, col.b, 0f)));
+		yield return new WaitForSeconds (duration);
+		blackoutDip.gameObject.SetActive(false);
+	}
+
+	public virtual void SwipeUp(GameObject obj, Vector3 point, StateMachine checkMachine){
+		//GetCurrentState ().SwipeUp (obj, point, checkMachine);
+		is_swipe = true;
+		lastSwipeTime = Time.time;
+	}
+	public virtual void SwipeDown(GameObject obj, Vector3 point, StateMachine checkMachine){
+		//GetCurrentState().SwipeDown (obj, point, checkMachine);
+		is_swipe = true;
+		lastSwipeTime = Time.time;
+	}
+	public virtual void SwipeForward(GameObject obj, Vector3 point, StateMachine checkMachine){
+		//GetCurrentState().SwipeForward (obj, point, checkMachine);
+		is_swipe = true;
+		lastSwipeTime = Time.time;
+	}
+	public virtual void SwipeBack(GameObject obj, Vector3 point, StateMachine checkMachine){
+		//GetCurrentState().SwipeBack (obj, point, checkMachine);
+		is_swipe = true;
+		lastSwipeTime = Time.time;
+	}
+
+	public void CheckInteractionChange(GameObject sightedObject){
+		if (sightedObject != null) {
+			StateMachine sm = sightedObject.GetComponentInParent<StateMachine> ();
+			if (sm != null) {
+				List<InputMachine> inputs = sm.InstanceHover ();
+				if (inputs != null) {
+					if (inputs.Count == 1) {
+						UpdateState (inputs [0], this);
+						reticle.SetReticle (inputs [0]);
+					}
+				}
+			}
+		}
+	}
+
+	public void PickUpItem(ItemMachine item){
+		if (heldItem != null) {
+			RecipeManager.instance.RecipeOutput (heldItem, item);
+		} else {
+			heldItem = item;
+			if (heldItem.holdingSurface != null) {
+				heldItem.holdingSurface.RemoveItem (item);
+			}
+			//set parent
+			heldItem.transform.localPosition = Vector3.zero;
+		}
+	}
+	public void PlaceObject(SurfaceMachine surface){
+		if (surface.heldItem != null && surface.specialHeldItem != null) {
+			return;
+		}
+		if (heldItem == null) {
+			return;
+		}
+		foreach (ItemMachine im in surface.specialHold) {
+			if (im.itemName == heldItem.itemName && surface.specialHeldItem == null) {
+				surface.SetItem (heldItem);
+				heldItem = null;
+				return;
+			}
+		}
+		if (surface.heldItem == null) {
+			surface.SetItem (heldItem);
+			heldItem = null;
+		}
 	}
 }

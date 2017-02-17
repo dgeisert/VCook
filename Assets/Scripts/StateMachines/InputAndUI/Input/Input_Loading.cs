@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Input_Loading : InputMachine {
+public class Input_Loading : HandMachine {
 
 	public override void CheckUpdate(StateMachine checkMachine){
 		//checkMachine.UpdateState (StateMaster.instance.animalRunningAway, checkMachine);

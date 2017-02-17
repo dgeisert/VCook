@@ -4,14 +4,10 @@ using System.Collections.Generic;
 
 public class ReticleMachine : StateMachine {
 
-	public HandMachine left, right;
+	public HandMachine hand;
 	public bool is_nearObjects = false, is_onGround;
 	private InputMachine currentInteractionState;
 	private ReticleInstance reticleInstance;
-
-	void Start(){
-		Initiate ();
-	}
 
 	public override void InstanceInitiate(StateMachine checkMachine){
 		timer.timerDuration = 0.1f;
@@ -21,15 +17,11 @@ public class ReticleMachine : StateMachine {
 		if (currentInteractionState == setValue && reticleInstance != null) {
 			return;
 		}
-		left.SetHand (setValue);
-		right.SetHand (setValue);
 		if (reticleInstance != null) {
 			Destroy (reticleInstance.gameObject);
 		}
-		currentInteractionState = setValue;
-		GameObject newHand = (GameObject)GameObject.Instantiate (setValue.setReticle, transform);
-		newHand.transform.localPosition = Vector3.zero;
-		reticleInstance = newHand.GetComponent<ReticleInstance> ();
+		GameObject newReticle = (GameObject)GameObject.Instantiate (Resources.Load ("Inputs/Reticles/" + setValue.GetType().ToString()) as GameObject, transform.position, transform.rotation, transform);
+		reticleInstance = newReticle.GetComponent<ReticleInstance>();
 	}
 
 	public Transform getTimerLocation(){
@@ -43,6 +35,10 @@ public class ReticleMachine : StateMachine {
 		return transform;
 	}
 
+	public void Gaze(Vector3 point){
+		transform.position = point;
+	}
+
 	public override void InstanceUpdate(StateMachine checkMachine) {
 		Vector3 targetLocation = transform.position + 2 * (transform.position - PlayerMachine.playerObject.transform.position);
 		if (reticleInstance != null) {
@@ -52,11 +48,11 @@ public class ReticleMachine : StateMachine {
 			is_nearObjects = false;
 		}
 		if (reticleInstance != null) {
-			if (!InputMachine.instance.is_holding) {
+			if (!hand.is_holding) {
 				reticleInstance.SetNoHold ();
 			} else {
-				if (currentInteractionState.canInteract) {
-					reticleInstance.SetHoldTrue (right.transform.position, targetLocation);
+				if (hand.canInteract) {
+					reticleInstance.SetHoldTrue (transform.position, targetLocation);
 				} else {
 					reticleInstance.SetHoldFalse ();
 				}

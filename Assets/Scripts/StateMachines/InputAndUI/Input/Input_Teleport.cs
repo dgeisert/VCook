@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Input_Teleport : InputMachine {
+public class Input_Teleport : HandMachine {
 
 	public override void CheckUpdate(StateMachine checkMachine){
 	}
@@ -38,26 +38,26 @@ public class Input_Teleport : InputMachine {
 		}
 		else if (obj.GetComponent<Platform>() != null) {
 			canInteract = true;
-		}
+		}/*
 		else if (InputMachine.instance.reticle.is_nearObjects
 			|| !InputMachine.instance.reticle.is_onGround) {
 			canInteract = false;
-		} else {
+		} */else {
 			canInteract = true;
 		}
 	}
 	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){
-		if (obj != null) {
+		if (obj != null) {/*
 			if (obj.GetComponent<Platform> () ||
 			    (!InputMachine.instance.reticle.is_nearObjects
 					&& InputMachine.instance.reticle.is_onGround)) {
 				StartCoroutine (Teleport(point, 0.1f));
-			}
+			}*/
 		}
 	}
 
 	IEnumerator Teleport(Vector3 point, float duration){
-		InputMachine.instance.DipToColor (new Color(0f,0f,0f,0.5f), duration);
+		//InputMachine.instance.DipToColor (new Color(0f,0f,0f,0.5f), duration);
 		PlayerMachine.instance.SavePlayerPosition ();
 		yield return new WaitForSeconds (duration);
 		PlayerMachine.playerObject.transform.position = point

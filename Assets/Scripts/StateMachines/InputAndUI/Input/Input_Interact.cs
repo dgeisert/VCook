@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Input_Interact : InputMachine {
+public class Input_Interact : HandMachine {
 
 	public override void CheckUpdate(StateMachine checkMachine){
 		//checkMachine.UpdateState (StateMaster.instance.animalRunningAway, checkMachine);
@@ -57,10 +57,10 @@ public class Input_Interact : InputMachine {
 		}
 		if (obj.GetComponent<StateMachine> () == null) {
 			if (obj.GetComponentInParent<StateMachine> () != null) {
-				obj.GetComponentInParent<StateMachine> ().Interact (obj, point);
+				obj.GetComponentInParent<StateMachine> ().Interact (obj, point, (HandMachine) checkMachine);
 			}
 			return;
 		}
-		obj.GetComponent<StateMachine> ().Interact (obj, point);
+		obj.GetComponent<StateMachine> ().Interact (obj, point, (HandMachine) checkMachine);
 	}
 }

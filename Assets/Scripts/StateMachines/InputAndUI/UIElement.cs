@@ -16,7 +16,7 @@ public class UIElement : StateMachine {
 		
 	}
 
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine){
+	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
 		Debug.Log(EventSystem.current.currentSelectedGameObject.name);
 	}
 
