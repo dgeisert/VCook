@@ -9,6 +9,7 @@ public class House_Open : HouseMachine {
 	}
 	public override void InstanceUpdate(StateMachine checkMachine){
 	}
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+	public override bool InstancePoint(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+		return true;
 	}
 }

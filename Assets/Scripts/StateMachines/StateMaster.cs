@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class StateMaster : MonoBehaviour {
-	public InputMachine inputUI, inputTeleport, inputInteract
+	public HandMachine inputUI, inputTeleport, inputInteract
 	, inputPickUp, inputInspect, inputChop, inputGather;
 	public HouseMachine houseOpen;
 	public GameObject number, timer;

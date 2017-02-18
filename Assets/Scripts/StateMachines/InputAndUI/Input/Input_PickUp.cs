@@ -27,21 +27,26 @@ public class Input_PickUp : HandMachine {
 	public override void SwipeBack(GameObject obj, Vector3 point, StateMachine checkMachine){
 		checkMachine.UpdateState (checkMachine.GetComponent<InputMachine> ().swipeBack, checkMachine);
 	}
-	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine){}
-	public override void CheckInteract(GameObject obj, Vector3 point, StateMachine checkMachine){
-		if (obj == null) {
-			canInteract = false;
-		}
-		if (obj.GetComponentInParent<ItemMachine> () != null) {
-			canInteract = true;
-		}
-		if (obj.GetComponentInParent<SurfaceMachine> () != null) {
-			canInteract = true;//obj.GetComponentInParent<SurfaceMachine> ().heldItem != null;
+	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){
+		if (((HandMachine)checkMachine).canInteract) {
+			if (obj == null) {
+				return;
+			}
+			obj.GetComponentInParent<StateMachine> ().Interact (obj, point, (HandMachine) checkMachine, interaction, is_distant);
 		}
 	}
-	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){
-		if (canInteract) {
-			obj.GetComponentInParent<StateMachine> ().Interact (obj, point, (HandMachine) checkMachine);
+	public override void CheckInteract(GameObject obj, Vector3 point, StateMachine checkMachine){
+		if (obj == null) {
+			((HandMachine)checkMachine).canInteract = false;
+			return;
 		}
+		if (obj.GetComponentInParent<ItemMachine> () != null) {
+			((HandMachine)checkMachine).canInteract = true;
+		}
+		if (obj.GetComponentInParent<SurfaceMachine> () != null) {
+			((HandMachine)checkMachine).canInteract = true;//obj.GetComponentInParent<SurfaceMachine> ().heldItem != null;
+		}
+	}
+	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){
 	}
 }

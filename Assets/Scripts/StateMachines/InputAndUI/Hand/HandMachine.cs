@@ -10,16 +10,22 @@ public enum Hand {
 	Left,
 	Headset
 }
+public enum InteractionButton {
+	Trigger,
+	Grip,
+	A,
+	B
+}
 
 public class HandMachine : InputMachine {
 
 	[SerializeField] public Hand hand = Hand.Headset;
 	public ReticleMachine reticle;
 	public Transform raycastTransform, holdPosition;
-	public bool is_nearObjects = false, is_onGround, is_holding = false;
+	public bool is_holding = false;
 	private InputMachine currentInteractionState;
 	private HandInstance handInstance;
-	public string trigger, grip, dpadX, dpadY, button1, button2, button3, button4;
+	public SteamVR_Controller.Device controller;
 
 	public GameObject blackout;
 	public SpriteRenderer blackoutDip;
@@ -28,9 +34,25 @@ public class HandMachine : InputMachine {
 	public float holdStart;
 	float lastSwipeTime;
 	bool is_swipe = false;
+	public bool canInteract;
+	public StateMachine touchedObject;
+	public float timeToResetTouchedObject = 0.2F;
 
-	InputMachine GetCurrentState(){
-		return (InputMachine) currentState;
+	public virtual void Tap(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){}
+	public virtual void Release(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){}
+	public virtual void CheckInteract(GameObject obj, Vector3 point, StateMachine checkMachine){}
+
+	HandMachine GetCurrentState(){
+		if (currentState == null) {
+			return StateMaster.instance.inputInspect;
+		}
+		return (HandMachine) currentState;
+	}
+
+	void OnEnable(){
+		if (hand != Hand.Headset) {
+			controller = SteamVR_Controller.Input ((int)(GetComponent<SteamVR_TrackedObject> ().index));
+		}
 	}
 
 	public override void InstanceInitiate(StateMachine checkMachine){
@@ -43,6 +65,7 @@ public class HandMachine : InputMachine {
 		if (reticle != null) {
 			reticle.Initiate ();
 		}
+		secondaryTimer = new Timer (this);
 	}
 
 	public void SetHand(InputMachine setValue){
@@ -71,17 +94,47 @@ public class HandMachine : InputMachine {
 		}
 	}
 
+	void OnTriggerStay(Collider col){
+		StateMachine sm = col.GetComponentInParent<StateMachine> ();
+		if (sm == null) {
+			return;
+		}
+		if (sm.GetComponent<ReticleMachine> () != null) {
+			return;
+		}
+		if (sm.GetComponent<HandMachine> () != null) {
+			return;
+		}
+		if (touchedObject == null) {
+			touchedObject = sm;
+			secondaryTimer.StartTimer (timeToResetTouchedObject);
+			return;
+		}
+		if (touchedObject == sm) {
+			return;
+			secondaryTimer.StartTimer (timeToResetTouchedObject);
+		}
+		if (Vector3.Distance(transform.position, sm.transform.position) < Vector3.Distance(transform.position, touchedObject.transform.position)) {
+			Debug.Log (sm.name);
+			touchedObject = sm;
+			secondaryTimer.StartTimer (timeToResetTouchedObject);
+		}
+	}
+
 	KeyValuePair<Vector3, GameObject> GetSightedPoint(Transform raycastTransform){
+		if (touchedObject != null) {
+			return new KeyValuePair<Vector3, GameObject> (touchedObject.transform.position, touchedObject.gameObject);
+		}
 		RaycastHit hit;
 		Ray inputRay = new Ray(raycastTransform.position, raycastTransform.forward);
 		if (Physics.Raycast (inputRay, out hit, InputMachine.instance.maxDistance)) {
 			if (hit.transform != null) {
 				return new KeyValuePair<Vector3, GameObject> (hit.point, hit.transform.gameObject);
 			} else {
-				return new KeyValuePair<Vector3, GameObject> (transform.position + transform.forward * maxDistance, null);
+				return new KeyValuePair<Vector3, GameObject> (transform.position + transform.forward * InputMachine.instance.maxDistance, null);
 			}
 		} else {
-			return new KeyValuePair<Vector3, GameObject> (transform.position + transform.forward * maxDistance, null);
+			return new KeyValuePair<Vector3, GameObject> (transform.position + transform.forward * InputMachine.instance.maxDistance, null);
 		}
 	}
 
@@ -95,16 +148,41 @@ public class HandMachine : InputMachine {
 		if (reticle != null) {
 			reticle.Gaze (sightedPoint);
 		}
-		if (trigger != "") {
-			if (Input.GetAxis (trigger) > 0.5F) {
+		if (controller != null) {
+			bool is_distant = touchedObject == null;
+			if (!is_distant) {
+				is_distant = sightedObject != touchedObject.gameObject;
+			}
+			if (controller.GetHairTriggerDown()) {
+				holdStart = Time.time;
+				GetCurrentState ().Tap (sightedObject, sightedPoint, this, InteractionButton.Trigger, is_distant);
+			}
+			if (controller.GetHairTriggerUp()) {
+				if (!is_swipe) {
+					GetCurrentState ().Release (sightedObject, sightedPoint, this, InteractionButton.Trigger, is_distant);
+				}
+			}
+			if (controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_Grip)) {
 				is_holding = true;
 				holdStart = Time.time;
-				GetCurrentState ().Tap (sightedObject, sightedPoint, this);
+				GetCurrentState ().Tap (sightedObject, sightedPoint, this, InteractionButton.Grip, is_distant);
 			}
-			if (Input.GetAxis (trigger) < 0.5F && is_holding) {
+			if (controller.GetPressUp(Valve.VR.EVRButtonId.k_EButton_Grip)) {
 				is_holding = false;
+				if (heldItem != null) {
+					heldItem.transform.SetParent (null);
+					heldItem.rb.isKinematic = false;
+					heldItem.rb.useGravity = true;
+					heldItem = null;
+				}
+			}
+			if (controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_A)) {
+				holdStart = Time.time;
+				GetCurrentState ().Tap (sightedObject, sightedPoint, this, InteractionButton.A, is_distant);
+			}
+			if (controller.GetPressUp(Valve.VR.EVRButtonId.k_EButton_A)) {
 				if (!is_swipe) {
-					GetCurrentState ().Release (sightedObject, sightedPoint, this);
+					GetCurrentState ().Release (sightedObject, sightedPoint, this, InteractionButton.A, is_distant);
 				}
 			}
 		}
@@ -117,20 +195,25 @@ public class HandMachine : InputMachine {
 			if (!is_holding) {
 				handInstance.SetNoHold ();
 			} else {
-				if (currentInteractionState.canInteract) {
+				if (canInteract) {
 					handInstance.SetHoldTrue ();
 				} else {
 					handInstance.SetHoldFalse ();
 				}
 			}
 		}
-	}
-
-	public void OnTriggerStay(Collider col){
+		if (heldItem != null) {
+			heldItem.transform.localPosition = Vector3.zero;
+		}
+		if (secondaryTimer.CheckTimer ()) {
+			touchedObject = null;
+		}
 	}
 
 	public void DipToColor(Color col, float duration){
-		StartCoroutine (DipToColorStart(col, duration));
+		if (enabled) {
+			StartCoroutine (DipToColorStart (col, duration));
+		}
 	}
 	IEnumerator DipToColorStart(Color col, float duration){
 		blackoutDip.gameObject.SetActive(true);
@@ -184,11 +267,14 @@ public class HandMachine : InputMachine {
 			RecipeManager.instance.RecipeOutput (heldItem, item);
 		} else {
 			heldItem = item;
+			heldItem.rb.isKinematic = true;
+			heldItem.rb.useGravity = false;
 			if (heldItem.holdingSurface != null) {
 				heldItem.holdingSurface.RemoveItem (item);
 			}
-			//set parent
+			item.transform.SetParent (transform);
 			heldItem.transform.localPosition = Vector3.zero;
+			heldItem.transform.localRotation = Quaternion.identity;
 		}
 	}
 	public void PlaceObject(SurfaceMachine surface){

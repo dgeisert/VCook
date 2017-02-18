@@ -12,8 +12,9 @@ public class HouseMachine : StateMachine {
 		timer.StartTimer ();
 	}
 
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
-		currentState.InstanceInteract (obj, point, this, hand);
+	public override bool InstancePoint(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+		currentState.InstancePoint (obj, point, this, hand);
+		return true;
 	}
 
 	public override void InstanceUpdate(StateMachine checkMachine){

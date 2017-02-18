@@ -31,7 +31,7 @@ public class Input_UI : HandMachine {
 	public override void SwipeBack(GameObject obj, Vector3 point, StateMachine checkMachine){
 		UIManager.instance.SetBackwards ();
 	}
-	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine){
+	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){
 	}
-	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){}
+	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){}
 }

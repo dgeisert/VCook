@@ -27,7 +27,7 @@ public class Input_Chop : HandMachine {
 	public override void SwipeBack(GameObject obj, Vector3 point, StateMachine checkMachine){
 		checkMachine.UpdateState (checkMachine.GetComponent<InputMachine> ().swipeBack, checkMachine);
 	}
-	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine){
+	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){
 		if (obj == null) {
 			return;
 		}
@@ -39,7 +39,7 @@ public class Input_Chop : HandMachine {
 		}
 		canInteract = false;
 	}
-	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){
+	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){
 		/*TimerObject tObj = InputMachine.instance.reticle.getTimerLocation ().GetComponentInChildren<TimerObject> ();
 		if (tObj != null) {
 			Destroy(tObj.gameObject);

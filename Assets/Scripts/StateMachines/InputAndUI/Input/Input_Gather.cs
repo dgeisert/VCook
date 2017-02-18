@@ -27,7 +27,7 @@ public class Input_Gather: HandMachine {
 	public override void SwipeBack(GameObject obj, Vector3 point, StateMachine checkMachine){
 		checkMachine.UpdateState (checkMachine.GetComponent<InputMachine> ().swipeBack, checkMachine);
 	}
-	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine){}
+	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){}
 	public override void CheckInteract(GameObject obj, Vector3 point, StateMachine checkMachine){
 		if (obj == null) {
 			canInteract = false;
@@ -35,7 +35,7 @@ public class Input_Gather: HandMachine {
 		}
 		canInteract = false;
 	}
-	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){
+	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){
 		if (canInteract) {
 			
 		}

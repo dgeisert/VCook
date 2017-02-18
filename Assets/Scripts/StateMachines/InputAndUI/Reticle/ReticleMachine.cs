@@ -48,6 +48,7 @@ public class ReticleMachine : StateMachine {
 			is_nearObjects = false;
 		}
 		if (reticleInstance != null) {
+			reticleInstance.transform.rotation = Quaternion.identity;
 			if (!hand.is_holding) {
 				reticleInstance.SetNoHold ();
 			} else {

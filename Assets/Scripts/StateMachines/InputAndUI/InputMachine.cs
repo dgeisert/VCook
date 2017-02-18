@@ -16,7 +16,6 @@ public class InputMachine: StateMachine {
 	public float renderDistance = 50;
 	public float deltaTime;
 	public TextMesh fpsText;
-	public bool canInteract;
 
 	public RoomMachine myRoom;
 	public GameObject mainUI;
@@ -55,9 +54,6 @@ public class InputMachine: StateMachine {
 		CheckObjects ();
 		CheckObjects ();
 	}
-	public virtual void Tap(GameObject obj, Vector3 point, StateMachine checkMachine){}
-	public virtual void Release(GameObject obj, Vector3 point, StateMachine checkMachine){}
-	public virtual void CheckInteract(GameObject obj, Vector3 point, StateMachine checkMachine){}
 	public override void InstanceUpdate(StateMachine checkMachine){
 		if(Input.GetKeyDown(KeyCode.A)){
 			PlayerMachine.playerObject.transform.Rotate (0, -45, 0);

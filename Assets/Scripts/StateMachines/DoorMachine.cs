@@ -6,11 +6,21 @@ public class DoorMachine : StateMachine {
 	public Transform toPosition;
 	public RoomMachine room, toRoom;
 
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+	public override bool InstancePoint(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
 		if (toPosition != null) {
 			PlayerMachine.playerObject.transform.position = toPosition.position + Vector3.up * InputMachine.playerHeight;
 			InputMachine.instance.SetRoom (toRoom);
+			return true;
 		}
+		return false;
+	}
 
+	public override bool InstanceTeleport(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+		if (toPosition != null) {
+			PlayerMachine.playerObject.transform.position = toPosition.position + Vector3.up * InputMachine.playerHeight;
+			InputMachine.instance.SetRoom (toRoom);
+			return true;
+		}
+		return false;
 	}
 }

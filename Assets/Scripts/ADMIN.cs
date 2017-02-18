@@ -10,8 +10,8 @@ public class ADMIN : StateMachine {
 
 	public string action = "";
 
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
-		
+	public override bool InstancePoke(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+		return true;
 	}
 
 	public override void InstanceUpdate(StateMachine checkMachine){

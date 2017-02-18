@@ -27,22 +27,22 @@ public class Input_Inspect : HandMachine {
 	public override void SwipeBack(GameObject obj, Vector3 point, StateMachine checkMachine){
 		checkMachine.UpdateState (checkMachine.GetComponent<InputMachine> ().swipeBack, checkMachine);
 	}
-	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine){}
+	public override void Tap(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){}
 	public override void CheckInteract(GameObject obj, Vector3 point, StateMachine checkMachine){
 		if (obj == null) {
-			canInteract = false;
+			((HandMachine)checkMachine).canInteract = false;
 			return;
 		}
 		StateMachine sm = obj.GetComponentInParent<StateMachine> ();
 		if (sm != null) {
 			if (sm.GetComponent<Ground> () != null) {
-				canInteract = false;
+				((HandMachine)checkMachine).canInteract = false;
 				return;
 			}
-			canInteract = true;
+			((HandMachine)checkMachine).canInteract = true;
 			return;
 		}
-		canInteract = false;
+		((HandMachine)checkMachine).canInteract = false;
 	}
-	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine){}
+	public override void Release(GameObject obj, Vector3 point, StateMachine checkMachine, InteractionButton interaction, bool is_distant){}
 }

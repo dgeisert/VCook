@@ -34,18 +34,18 @@ public class SurfaceMachine : StateMachine {
 		return new List<InputMachine>(){StateMaster.instance.inputPickUp };
 	}
 
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+	public override bool InstanceGrab(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
 		switch (transformationType) {
 		case TransformationType.Bin:
 			if (hand.heldItem == null && heldItem == null) {
 				GameObject go = (GameObject)GameObject.Instantiate (specialHold [0].gameObject);
 				hand.PickUpItem (go.GetComponent<ItemMachine>());
-				return;
+				return true;
 			}
 			break;
 		case TransformationType.Sell:
 			if (hand.heldItem == null) {
-				return;
+				return false;
 			}
 			foreach (ItemMachine im in specialHold) {
 				if (im.itemName == hand.heldItem.itemName) {
@@ -54,16 +54,22 @@ public class SurfaceMachine : StateMachine {
 				}
 			}
 			break;
+		case TransformationType.Trash:
+			Destroy (hand.heldItem.gameObject);
+			break;
 		default:
 			hand.PlaceObject(this);
 			break;
 		}
+		return true;
 	}
 
 	public void SetItem(ItemMachine item){
 		foreach(ItemMachine im in specialHold){
 			if (specialHeldItem == null && im.itemName == item.itemName) {
 				specialHeldItem = item;
+				specialHeldItem.rb.isKinematic = true;
+				specialHeldItem.rb.useGravity = false;
 				specialHeldItem.holdingSurface = this;
 				specialHeldItem.transform.SetParent (specialHoldPosition);
 				specialHeldItem.transform.localPosition = Vector3.zero;
@@ -72,6 +78,8 @@ public class SurfaceMachine : StateMachine {
 			}
 		}
 		heldItem = item;
+		heldItem.rb.isKinematic = true;
+		heldItem.rb.useGravity = false;
 		heldItem.holdingSurface = this;
 		heldItem.transform.SetParent (holdPosition);
 		heldItem.transform.localPosition = Vector3.zero;
@@ -85,6 +93,8 @@ public class SurfaceMachine : StateMachine {
 		}
 		if (heldItem != null) {
 			if (heldItem.itemName == item.itemName) {
+				heldItem.rb.isKinematic = false;
+				heldItem.rb.useGravity = true;
 				heldItem.holdingSurface = null;
 				heldItem = null;
 				return;
@@ -92,6 +102,8 @@ public class SurfaceMachine : StateMachine {
 		}
 		if (specialHeldItem != null && transformationType != TransformationType.Bin) {
 			if (specialHeldItem.itemName == item.itemName) {
+				specialHeldItem.rb.isKinematic = false;
+				specialHeldItem.rb.useGravity = true;
 				specialHeldItem.holdingSurface = null;
 				specialHeldItem = null;
 				return;

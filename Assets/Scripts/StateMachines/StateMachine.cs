@@ -29,7 +29,11 @@ public class StateMachine: MonoBehaviour {
 	public virtual void EnterState(StateMachine checkMachine){}
 	public virtual void InstanceInitiate(StateMachine checkMachine){}
 	public virtual void InstanceUpdate(StateMachine checkMachine){}
-	public virtual void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){}
+	public virtual bool InstanceGrab(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){return false;}
+	public virtual bool InstancePoint(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){return false;}
+	public virtual bool InstanceRemoteGrab(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){return false;}
+	public virtual bool InstanceTeleport(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){return false;}
+	public virtual bool InstancePoke(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){return false;}
 	public virtual List<InputMachine> InstanceHover(){
 		return null;
 	}
@@ -72,10 +76,48 @@ public class StateMachine: MonoBehaviour {
 		InstanceUpdate (this);
 	}
 
-	public void Interact(GameObject obj, Vector3 point, HandMachine hand){
+	public void Interact(GameObject obj, Vector3 point, HandMachine hand, InteractionButton interactionButton, bool is_distant){
 		if (GetComponent<StateMaster> () != null) {
 			return;
 		}
-		InstanceInteract(obj, point, this, hand);
+		if (is_distant) {
+			switch (interactionButton) {
+			case InteractionButton.Trigger:
+				InstancePoint (obj, point, this, hand);
+				break;
+			case InteractionButton.Grip:
+				InstanceRemoteGrab (obj, point, this, hand);
+				break;
+			case InteractionButton.A:
+				InstanceTeleport (obj, point, this, hand);
+				break;
+			case InteractionButton.B:
+				break;
+			default:
+				break;
+			}
+		} else {
+			switch (interactionButton) {
+			case InteractionButton.Trigger:
+				if (!InstancePoke (obj, point, this, hand)) {
+					InstanceRemoteGrab (obj, point, this, hand);
+				};
+				break;
+			case InteractionButton.Grip:
+				if (!InstanceGrab (obj, point, this, hand)){
+					InstanceRemoteGrab (obj, point, this, hand);
+				}
+				break;
+			case InteractionButton.A:
+				if (!InstanceTeleport (obj, point, this, hand)){
+
+				}
+				break;
+			case InteractionButton.B:
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }

@@ -8,22 +8,23 @@ public class ItemMachine : StateMachine {
 	public TransformationType transformationType = TransformationType.None;
 	public int phases = 3 , value = 10;
 	public string itemName;
+	public Rigidbody rb;
 
 	public override void InstanceInitiate(StateMachine checkMachine){
-		
 	}
 
 	public override List<InputMachine> InstanceHover(){
 		return new List<InputMachine>(){StateMaster.instance.inputPickUp };
 	}
 
-	public override void InstanceInteract(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+	public override bool InstanceGrab(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
 		if (holdingSurface != null) {
 			if (TransformationManager.instance.Transformation (this)) {
-				return;
+				return true;
 			}
 		}
-		//InputMachine.instance.PickUpItem (this);
+		hand.PickUpItem (this);
+		return true;
 		//currentState.InstanceInteract (obj, point, checkMachine);
 	}
 }
