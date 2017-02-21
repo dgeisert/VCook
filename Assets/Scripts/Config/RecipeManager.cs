@@ -29,7 +29,6 @@ public class RecipeManager : MonoBehaviour {
 				}
 			}
 			RecipeChecker.Add (r.inA.itemName + r.inB.itemName, r);
-			RecipeChecker.Add (r.inB.itemName + r.inA.itemName, r);
 		}
 	}
 
@@ -38,26 +37,35 @@ public class RecipeManager : MonoBehaviour {
 	}
 
 	public void RecipeOutput (ItemMachine heldItem, ItemMachine surfaceItem){
+		if (heldItem == null || surfaceItem == null) {
+			return;
+		}
 		if (!CheckRecipes (heldItem, surfaceItem)) {
 			return;
 		}
 		Recipe r = RecipeChecker [heldItem.itemName + surfaceItem.itemName];
-		ItemMachine toHand = r.outC;
-		ItemMachine toSurface = r.outD;
-		if (heldItem.itemName == r.inB.itemName) {
-			toHand = r.outD;
-			toSurface = r.outC;
+		GameObject toHandObject = (GameObject)GameObject.Instantiate (r.outC.gameObject);
+		if (heldItem.holdingHand != null) {
+			heldItem.holdingHand.heldItem = null;
+			heldItem.holdingHand.PickUpItem (toHandObject.GetComponent<ItemMachine> ());
+		} else if (heldItem.holdingSurface != null) {
+			heldItem.holdingSurface.SetItem (toHandObject.GetComponent<ItemMachine> ());
+		} else {
+			toHandObject.transform.position = heldItem.transform.position;
+			toHandObject.transform.rotation = heldItem.transform.rotation;
 		}
-		if (toHand != null) {
-			GameObject toHandObject = (GameObject)GameObject.Instantiate (toHand.gameObject);
-			InputMachine.instance.Right.heldItem = null;
-			InputMachine.instance.Right.PickUpItem (toHandObject.GetComponent<ItemMachine> ());
+		if (r.outD != null) {
+			GameObject toSurfaceObject = (GameObject)GameObject.Instantiate (r.outD.gameObject);
+			if (surfaceItem.holdingHand != null) {
+				surfaceItem.holdingHand.heldItem = null;
+				surfaceItem.holdingHand.PickUpItem (toSurfaceObject.GetComponent<ItemMachine> ());
+			} else if (surfaceItem.holdingSurface != null) {
+				surfaceItem.holdingSurface.SetItem (toSurfaceObject.GetComponent<ItemMachine> ());
+			} else {
+				toSurfaceObject.transform.position = surfaceItem.transform.position;
+				toSurfaceObject.transform.rotation = surfaceItem.transform.rotation;
+			}
 		}
-		if (toSurface != null) {
-			GameObject toSurfaceObject = (GameObject)GameObject.Instantiate (toSurface.gameObject);
-			surfaceItem.holdingSurface.SetItem (toSurfaceObject.GetComponent<ItemMachine> ());
-		}
-
 		Destroy (heldItem.gameObject);
 		Destroy (surfaceItem.gameObject);
 	}

@@ -60,7 +60,8 @@ public class Input_Teleport : HandMachine {
 		InputMachine.instance.Headset.DipToColor (new Color(0f,0f,0f,0.5f), duration);
 		PlayerMachine.instance.SavePlayerPosition ();
 		yield return new WaitForSeconds (duration);
-		PlayerMachine.playerObject.transform.position = point
-			+ PlayerMachine.playerObject.transform.up * InputMachine.playerHeight;
+		PlayerMachine.playerObject.transform.position = point 
+			- new Vector3 (InputMachine.instance.Headset.transform.position.x, 0, InputMachine.instance.Headset.transform.position.z)
+			+ new Vector3 (PlayerMachine.playerObject.transform.position.x, 0, PlayerMachine.playerObject.transform.position.z);
 	}
 }

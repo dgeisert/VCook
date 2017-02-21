@@ -26,6 +26,7 @@ public class HandMachine : InputMachine {
 	private InputMachine currentInteractionState;
 	private HandInstance handInstance;
 	public SteamVR_Controller.Device controller;
+	private KeyValuePair<float, Vector3> twoTenthsBack, oneTenthBack;
 
 	public GameObject blackout;
 	public SpriteRenderer blackoutDip;
@@ -66,6 +67,8 @@ public class HandMachine : InputMachine {
 			reticle.Initiate ();
 		}
 		secondaryTimer = new Timer (this);
+		oneTenthBack = new KeyValuePair<float, Vector3> (Time.time, transform.position);
+		twoTenthsBack = new KeyValuePair<float, Vector3> (Time.time, transform.position);
 	}
 
 	public void SetHand(InputMachine setValue){
@@ -94,6 +97,17 @@ public class HandMachine : InputMachine {
 		}
 	}
 
+	void OnTriggerEnter(Collider col){
+		HandMachine hm = col.GetComponentInParent<HandMachine> ();
+		if (hm != null) {
+			if (hm.heldItem != null && heldItem != null) {
+				if (!TransformationManager.instance.Transformation (heldItem, hm.heldItem)) {
+					RecipeManager.instance.RecipeOutput (heldItem, hm.heldItem);
+				}
+			}
+		}
+	}
+
 	void OnTriggerStay(Collider col){
 		StateMachine sm = col.GetComponentInParent<StateMachine> ();
 		if (sm == null) {
@@ -115,7 +129,6 @@ public class HandMachine : InputMachine {
 			secondaryTimer.StartTimer (timeToResetTouchedObject);
 		}
 		if (Vector3.Distance(transform.position, sm.transform.position) < Vector3.Distance(transform.position, touchedObject.transform.position)) {
-			Debug.Log (sm.name);
 			touchedObject = sm;
 			secondaryTimer.StartTimer (timeToResetTouchedObject);
 		}
@@ -163,6 +176,7 @@ public class HandMachine : InputMachine {
 				}
 			}
 			if (controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_Grip)) {
+				UpdateState (StateMaster.instance.inputPickUp, this);
 				is_holding = true;
 				holdStart = Time.time;
 				GetCurrentState ().Tap (sightedObject, sightedPoint, this, InteractionButton.Grip, is_distant);
@@ -171,12 +185,15 @@ public class HandMachine : InputMachine {
 				is_holding = false;
 				if (heldItem != null) {
 					heldItem.transform.SetParent (null);
+					heldItem.holdingHand = null;
 					heldItem.rb.isKinematic = false;
 					heldItem.rb.useGravity = true;
+					heldItem.rb.AddForce ((transform.position - twoTenthsBack.Value) / (Time.time - twoTenthsBack.Key) * 150);
 					heldItem = null;
 				}
 			}
 			if (controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_A)) {
+				UpdateState (StateMaster.instance.inputTeleport, this);
 				holdStart = Time.time;
 				GetCurrentState ().Tap (sightedObject, sightedPoint, this, InteractionButton.A, is_distant);
 			}
@@ -207,6 +224,10 @@ public class HandMachine : InputMachine {
 		}
 		if (secondaryTimer.CheckTimer ()) {
 			touchedObject = null;
+		}
+		if (oneTenthBack.Key + 0.1F < Time.time) {
+			twoTenthsBack = oneTenthBack;
+			oneTenthBack = new KeyValuePair<float, Vector3> (Time.time, transform.position);
 		}
 	}
 
@@ -267,6 +288,7 @@ public class HandMachine : InputMachine {
 			RecipeManager.instance.RecipeOutput (heldItem, item);
 		} else {
 			heldItem = item;
+			heldItem.holdingHand = this;
 			heldItem.rb.isKinematic = true;
 			heldItem.rb.useGravity = false;
 			if (heldItem.holdingSurface != null) {

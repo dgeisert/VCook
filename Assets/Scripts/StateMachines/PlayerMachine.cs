@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using Steamworks;
 
 public class PlayerMachine : StateMachine {
 
@@ -10,6 +12,12 @@ public class PlayerMachine : StateMachine {
 	public StateMaster stateMaster;
 	private Dictionary<string, int> resources;
 	private Dictionary<string, GameObject> loadedResources;
+	protected Callback<GameOverlayActivated_t> Callback_GameOverlayActivated;
+	protected Callback<LobbyCreated_t> Callback_lobbyCreated;
+	protected Callback<LobbyMatchList_t> Callback_lobbyList;
+	protected Callback<LobbyEnter_t> Callback_lobbyEnter;
+	protected Callback<LobbyDataUpdate_t> Callback_lobbyInfo;
+	protected Callback<GameLobbyJoinRequested_t> Callback_joinLobby;
 
 	public override void InstanceInitiate(StateMachine checkMachine){
 		stateMaster.Setup ();
@@ -36,10 +44,98 @@ public class PlayerMachine : StateMachine {
 			transform.localRotation = tr.localRotation;
 			Destroy (tr.gameObject);
 		} else {
-			transform.position = AreaStartStateMachine.instance.transform.position + Vector3.up * InputMachine.playerHeight;
+			transform.position = AreaStartStateMachine.instance.transform.position;
 			transform.rotation = AreaStartStateMachine.instance.transform.rotation;
 		}
 		LoadGos ();
+		if(SteamManager.Initialized) {
+			Callback_GameOverlayActivated = Callback<GameOverlayActivated_t>.Create(OnGameOverlayActivated);
+			Callback_lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
+			Callback_lobbyList = Callback<LobbyMatchList_t>.Create(OnLobbyList);
+			Callback_lobbyEnter = Callback<LobbyEnter_t>.Create(OnLobbyEnter);
+			Callback_lobbyInfo = Callback<LobbyDataUpdate_t>.Create(OnLobbyInfo);
+			Callback_joinLobby = Callback<GameLobbyJoinRequested_t>.Create(OnJoinRequest);
+			string name = SteamFriends.GetPersonaName();
+			Debug.Log(name);
+			if (name == "geisert" && isAtStartup) {
+				Debug.Log ("Starting Server");
+				SetupServer ();
+			}
+		}
+	}
+
+	public void OnGameOverlayActivated(GameOverlayActivated_t overlay){
+
+	}
+
+	public void OnLobbyCreated(LobbyCreated_t lobbyCreated){
+		Debug.Log ("Lobby Created");
+	}
+
+	public void OnLobbyList(LobbyMatchList_t lobbyList){
+		Debug.Log ("Lobby List");
+	}
+
+	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
+		Debug.Log ("Lobby Enter");
+	}
+
+	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
+		Debug.Log ("Lobby Info");
+	}
+
+	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
+		JoinLobby (joinRequest.m_steamIDLobby);
+	}
+
+	public override void InstanceUpdate(StateMachine checkMachine){
+		if(Input.GetKeyDown(KeyCode.C)){
+			SetupLocalClient ();
+		}
+	}
+
+	NetworkClient myClient;
+	bool isAtStartup = true;
+	// Create a server and listen on a port
+	public void SetupServer()
+	{
+		if (SteamManager.Initialized) {
+			CreateLobby (ELobbyType.k_ELobbyTypeFriendsOnly, 2);
+		}
+	}
+
+	SteamAPICall_t CreateLobby (ELobbyType eLobbyType, int maxMembers){
+		return SteamMatchmaking.CreateLobby (eLobbyType, maxMembers);
+	}
+
+	SteamAPICall_t JoinLobby (CSteamID lobby){
+		return SteamMatchmaking.JoinLobby (lobby);
+	}
+
+	bool InviteUserToLobby(CSteamID lobby, CSteamID invitee){
+		SteamFriends.ActivateGameOverlayInviteDialog (new CSteamID());
+		return false;
+	}
+
+	// Create a client and connect to the server port
+	public void SetupClient()
+	{
+		myClient = new NetworkClient();
+		myClient.RegisterHandler(MsgType.Connect, OnConnected);
+		myClient.Connect("127.0.0.1", 4444);
+		isAtStartup = false;
+	}
+
+	// Create a local client and connect to the local server
+	public void SetupLocalClient()
+	{
+		myClient = ClientScene.ConnectLocalServer();
+		myClient.RegisterHandler(MsgType.Connect, OnConnected);     
+		isAtStartup = false;
+	}
+
+	public void OnConnected(NetworkMessage nmsg){
+		Debug.Log (nmsg.ToString());
 	}
 
 	public int GetResource(string resource){

@@ -47,12 +47,7 @@ public class SurfaceMachine : StateMachine {
 			if (hand.heldItem == null) {
 				return false;
 			}
-			foreach (ItemMachine im in specialHold) {
-				if (im.itemName == hand.heldItem.itemName) {
-					PlayerMachine.instance.AddResource ("coins", hand.heldItem.value);
-					Destroy (hand.heldItem.gameObject);
-				}
-			}
+			return SellItem (hand.heldItem);
 			break;
 		case TransformationType.Trash:
 			Destroy (hand.heldItem.gameObject);
@@ -62,6 +57,17 @@ public class SurfaceMachine : StateMachine {
 			break;
 		}
 		return true;
+	}
+
+	public bool SellItem(ItemMachine item){
+		foreach (ItemMachine im in specialHold) {
+			if (im.itemName == item.itemName) {
+				PlayerMachine.instance.AddResource ("coins", item.value);
+				Destroy (item.gameObject);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void SetItem(ItemMachine item){

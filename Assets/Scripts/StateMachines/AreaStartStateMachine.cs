@@ -31,8 +31,7 @@ public class AreaStartStateMachine : StateMachine {
 			if (usedRig == null) {
 				usedRig = (GameObject) Resources.Load("UsedRig", typeof(GameObject));
 			}
-			Vector3 startPosition = transform.position
-				+ Vector3.up * InputMachine.playerHeight;
+			Vector3 startPosition = transform.position;
 			GameObject go = (GameObject) GameObject.Instantiate (usedRig, startPosition, transform.rotation);
 			go.GetComponent<PlayerMachine> ().Initiate ();
 		} else {

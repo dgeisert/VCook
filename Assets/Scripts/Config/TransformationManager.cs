@@ -25,17 +25,56 @@ public class TransformationManager : MonoBehaviour {
 	}
 
 	public bool CheckTransformation (ItemMachine item, TransformationType tranType){
+		if (item == null) {
+			return false;
+		}
 		return TransformationChecker.ContainsKey(item.itemName + tranType.ToString());
 	}
 
-	public bool Transformation(ItemMachine item){
-		if (InputMachine.instance.Right.heldItem != null) {
-			if (CheckTransformation (item, item.holdingSurface.transformationType) && item.holdingSurface.transformationType == InputMachine.instance.Right.heldItem.transformationType) {
+	public bool Transformation(ItemMachine item, ItemMachine heldItem){
+		if (heldItem != null) {
+			if (CheckTransformation (item, heldItem.transformationType) && heldItem.transformationType == heldItem.transformationType) {
 				item.phase++;
 				if (item.phase >= item.phases) {
-					GameObject go = (GameObject)GameObject.Instantiate (TransformationChecker [item.itemName + item.holdingSurface.transformationType.ToString ()].outItem.gameObject);
-					item.holdingSurface.heldItem = null;
-					item.holdingSurface.SetItem (go.GetComponent<ItemMachine> ());
+					GameObject go = (GameObject)GameObject.Instantiate (TransformationChecker [item.itemName + heldItem.transformationType.ToString ()].outItem.gameObject);
+					if (item.holdingHand != null) {
+						item.holdingHand.heldItem = null;
+						item.holdingHand.PickUpItem (go.GetComponent<ItemMachine> ());
+					} else if (item.holdingSurface != null) {
+						item.holdingSurface.heldItem = null;
+						item.holdingSurface.SetItem (go.GetComponent<ItemMachine> ());
+					} else {
+						go.transform.position = item.transform.position;
+						go.transform.rotation = item.transform.rotation;
+					}
+					Destroy (item.gameObject);
+					return true;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public bool Transformation(ItemMachine item, SurfaceMachine surface){
+		if (surface != null) {
+			if (surface.transformationType == TransformationType.Sell) {
+				return surface.SellItem (item);
+			}
+			if (CheckTransformation (item, surface.transformationType) && surface.transformationType == surface.transformationType) {
+				item.phase++;
+				if (item.phase >= item.phases) {
+					GameObject go = (GameObject)GameObject.Instantiate (TransformationChecker [item.itemName + surface.transformationType.ToString ()].outItem.gameObject);
+					if (item.holdingHand != null) {
+						item.holdingHand.heldItem = null;
+						item.holdingHand.PickUpItem (go.GetComponent<ItemMachine> ());
+					} else if (item.holdingSurface != null) {
+						item.holdingSurface.heldItem = null;
+						item.holdingSurface.SetItem (go.GetComponent<ItemMachine> ());
+					} else {
+						go.transform.position = item.transform.position;
+						go.transform.rotation = item.transform.rotation;
+					}
 					Destroy (item.gameObject);
 					return true;
 				}

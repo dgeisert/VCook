@@ -21,7 +21,6 @@ public class InputMachine: StateMachine {
 	public GameObject mainUI;
 	public GameObject loadingUI;
 	public float maxDistance = 10f;
-	public static float playerHeight = 1.2f;
 	public float canvasDistance = 3f;
 	public float canvasWidth = 3f;
 	public float holdingTimeSwipeNegation = 0.3f;
@@ -67,9 +66,11 @@ public class InputMachine: StateMachine {
 		if (InputMachine.instance != this) {
 			return;
 		}
+		/*
 		deltaTime += (Time.deltaTime - deltaTime) * 0.1f;
 		float fps = 1.0f / deltaTime;
 		fpsText.text = string.Format("{0:0.} fps", fps);
+		*/
 	}
 
 	public void SpawnUI(GameObject prefab){
