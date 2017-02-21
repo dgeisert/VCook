@@ -86,6 +86,7 @@ public class PlayerMachine : StateMachine {
 	}
 
 	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
+		Debug.Log ("Requested to join lobby");
 		JoinLobby (joinRequest.m_steamIDLobby);
 	}
 
