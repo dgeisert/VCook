@@ -69,6 +69,7 @@ public class PlayerMachine : StateMachine {
 	}
 
 	public void OnLobbyCreated(LobbyCreated_t lobbyCreated){
+		SteamFriends.ActivateGameOverlayInviteDialog (new CSteamID(lobbyCreated.m_ulSteamIDLobby));
 		Debug.Log ("Lobby Created");
 	}
 
@@ -113,7 +114,6 @@ public class PlayerMachine : StateMachine {
 	}
 
 	bool InviteUserToLobby(CSteamID lobby, CSteamID invitee){
-		SteamFriends.ActivateGameOverlayInviteDialog (new CSteamID());
 		return false;
 	}
 
