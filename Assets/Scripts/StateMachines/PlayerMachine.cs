@@ -18,6 +18,9 @@ public class PlayerMachine : StateMachine {
 	protected Callback<LobbyEnter_t> Callback_lobbyEnter;
 	protected Callback<LobbyDataUpdate_t> Callback_lobbyInfo;
 	protected Callback<GameLobbyJoinRequested_t> Callback_joinLobby;
+	protected Callback<P2PSessionRequest_t> Callback_p2PSessionRequest;
+	private List<CSteamID> ExpectingClient = new List<CSteamID>();
+	private CSteamID lobbyID;
 
 	public override void InstanceInitiate(StateMachine checkMachine){
 		stateMaster.Setup ();
@@ -55,6 +58,7 @@ public class PlayerMachine : StateMachine {
 			Callback_lobbyEnter = Callback<LobbyEnter_t>.Create(OnLobbyEnter);
 			Callback_lobbyInfo = Callback<LobbyDataUpdate_t>.Create(OnLobbyInfo);
 			Callback_joinLobby = Callback<GameLobbyJoinRequested_t>.Create(OnJoinRequest);
+			Callback_p2PSessionRequest = Callback<P2PSessionRequest_t>.Create(OnP2PSessionRequest);
 			string name = SteamFriends.GetPersonaName();
 			Debug.Log(name);
 			if (name == "geisert" && isAtStartup) {
@@ -64,12 +68,25 @@ public class PlayerMachine : StateMachine {
 		}
 	}
 
+	void SendString(string str){
+		byte[] bytes = new byte[str.Length * sizeof(char)];
+		System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+		SendBytes (bytes);
+	}
+
+	public void SendBytes(byte[] bytes){
+		foreach (CSteamID csid in ExpectingClient) {
+			SteamNetworking.SendP2PPacket(csid, bytes, (uint) bytes.Length, EP2PSend.k_EP2PSendReliable);
+		}
+	}
+
 	public void OnGameOverlayActivated(GameOverlayActivated_t overlay){
 
 	}
 
 	public void OnLobbyCreated(LobbyCreated_t lobbyCreated){
-		SteamFriends.ActivateGameOverlayInviteDialog (new CSteamID(lobbyCreated.m_ulSteamIDLobby));
+		lobbyID = CSteamID (lobbyCreated.m_ulSteamIDLobby);
+		SteamFriends.ActivateGameOverlayInviteDialog (lobbyID);
 		Debug.Log ("Lobby Created");
 	}
 
@@ -78,7 +95,14 @@ public class PlayerMachine : StateMachine {
 	}
 
 	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
-		Debug.Log ("Lobby Enter");
+		lobbyID = CSteamID (lobbyEnter.m_ulSteamIDLobby);
+		int lobbyCount = SteamMatchmaking.GetNumLobbyMembers (lobbyID);
+		for (int i = 0; i < lobbyCount; i++) {
+			ExpectingClient.Add(SteamFriends.GetFriendFromSourceByIndex (lobbyID, i));
+		}
+		foreach (CSteamID csid in ExpectingClient) {
+			Debug.Log (SteamFriends.GetFriendPersonaName (csid));
+		}
 	}
 
 	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
@@ -88,6 +112,17 @@ public class PlayerMachine : StateMachine {
 	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
 		Debug.Log ("Requested to join lobby");
 		JoinLobby (joinRequest.m_steamIDLobby);
+	}
+
+	void OnP2PSessionRequest(P2PSessionRequest_t request)
+	{
+		CSteamID clientId = request.m_steamIDRemote;
+		if (ExpectingClient.Contains(clientId))
+		{
+			SteamNetworking.AcceptP2PSessionWithUser(clientId);
+		} else {
+			Debug.LogWarning("Unexpected session request from " + clientId);
+		}
 	}
 
 	public override void InstanceUpdate(StateMachine checkMachine){
