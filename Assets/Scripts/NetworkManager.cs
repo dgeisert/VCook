@@ -236,9 +236,6 @@ public class NetworkManager : MonoBehaviour {
 		if(Input.GetKeyDown(KeyCode.I)){
 			SteamFriends.ActivateGameOverlayInviteDialog (lobbyID);
 		}
-	}
-
-	public void FixedUpdate(){
 		Talk ();
 		ReadPackets ();
 		SendMyPosition ();
