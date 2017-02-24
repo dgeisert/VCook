@@ -10,6 +10,15 @@ public class ItemMachine : StateMachine {
 	public int phases = 3 , value = 10;
 	public string itemName;
 	public Rigidbody rb;
+	public string itemID;
+	static string glyphs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+
+	void Start(){
+		itemID = "";
+		for (int i = 0; i < 10; i++) {
+			itemID += glyphs[Random.Range(0, glyphs.Length)];
+		}
+	}
 
 	public override void InstanceInitiate(StateMachine checkMachine){
 	}

@@ -55,6 +55,24 @@ public class NetworkManager : MonoBehaviour {
 		SendBytes (bytes);
 	}
 
+	void SendClaimObject(string objID){
+		byte[] bytes = new byte[objID.Length * sizeof(char)];
+		System.Buffer.BlockCopy(objID.ToCharArray(), 0, bytes, 0, bytes.Length);
+		byte[] bytes2 = new byte[bytes.Length + 1];
+		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);
+		bytes2 [0] = (byte)4;
+		SendBytes (bytes);
+	}
+
+	void SendReleaseObject(string objID){
+		byte[] bytes = new byte[objID.Length * sizeof(char)];
+		System.Buffer.BlockCopy(objID.ToCharArray(), 0, bytes, 0, bytes.Length);
+		byte[] bytes2 = new byte[bytes.Length + 1];
+		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);
+		bytes2 [0] = (byte)5;
+		SendBytes (bytes);
+	}
+
 	public void SendBytes(byte[] bytes){
 		foreach (CSteamID csid in ExpectingClient) {
 			SteamNetworking.SendP2PPacket(csid, bytes, (uint) bytes.Length, EP2PSend.k_EP2PSendReliable);
@@ -146,7 +164,7 @@ public class NetworkManager : MonoBehaviour {
 				byte[] dataIn = new byte[size - 1];
 				Array.Copy (buffer, 1, dataIn, 0, size - 1);
 				switch (dataType) {
-				case 1:
+				case 1://voice
 					byte[] bufferOut = new byte[22050];
 					uint bytesOut;
 					EVoiceResult voiceOut = SteamUser.DecompressVoice (dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
@@ -158,17 +176,35 @@ public class NetworkManager : MonoBehaviour {
 					PlayerMachine.instance.chatAudio.clip.SetData (test, 0);
 					PlayerMachine.instance.chatAudio.Play ();
 					break;
-				case 2:
+				case 2://string
 					char[] chars = new char[bytesRead / sizeof(char)];
 					System.Buffer.BlockCopy(dataIn, 0, chars, 0, dataIn.Length);
 
 					string message = new string(chars, 0, chars.Length);
 					Debug.Log("Received a message: " + message);
 					break;
-				case 3:
+				case 3://ping
 					if (!ExpectingClient.Contains (remoteId)) {
 						ExpectingClient.Add (remoteId);
 					}
+					break;
+				case 4://claim object
+					char[] claimChars = new char[bytesRead / sizeof(char)];
+					System.Buffer.BlockCopy(dataIn, 0, claimChars, 0, dataIn.Length);
+					Debug.Log("Claimed: " + new string(claimChars, 0, claimChars.Length));
+					break;
+				case 5://release object claim
+					char[] releaseChars = new char[bytesRead / sizeof(char)];
+					System.Buffer.BlockCopy(dataIn, 0, releaseChars, 0, dataIn.Length);
+					Debug.Log("Released: " + new string(releaseChars, 0, releaseChars.Length));
+					break;
+				case 6://object update
+					char[] objectUpdateChars = new char[bytesRead / sizeof(char)];
+					System.Buffer.BlockCopy(dataIn, 0, objectUpdateChars, 0, dataIn.Length);
+					Debug.Log("Updated: " + new string(objectUpdateChars, 0, objectUpdateChars.Length));
+					break;
+				default:
+					Debug.Log ("Unknown Data");
 					break;
 				}
 			}
