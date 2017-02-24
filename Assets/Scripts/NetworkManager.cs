@@ -183,7 +183,7 @@ public class NetworkManager : MonoBehaviour {
 		int lobbyCount = SteamMatchmaking.GetNumLobbyMembers (lobbyID);
 		for (int i = 0; i < lobbyCount; i++) {
 			CSteamID csid = SteamFriends.GetFriendFromSourceByIndex (lobbyID, i);
-			if (!ExpectingClient.Contains (csid)){// && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
+			if (!ExpectingClient.Contains (csid) && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
 				ExpectingClient.Add(SteamFriends.GetFriendFromSourceByIndex (lobbyID, i));
 			}
 		}
@@ -280,6 +280,7 @@ public class NetworkManager : MonoBehaviour {
 				Array.Copy (buffer, 1, dataIn, 0, size - 1);
 				switch (dataType) {
 				case 0://ping
+					Debug.Log("ping");
 					if (!ExpectingClient.Contains (remoteId)) {
 						ExpectingClient.Add (remoteId);
 					}
