@@ -49,6 +49,9 @@ public class NetworkManager : MonoBehaviour {
 	void SendString(string str){
 		byte[] bytes = new byte[str.Length * sizeof(char)];
 		System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+		byte[] bytes2 = new byte[bytes.Length + 1];
+		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);
+		bytes2 [0] = (byte)2;
 		SendBytes (bytes);
 	}
 
@@ -95,6 +98,7 @@ public class NetworkManager : MonoBehaviour {
 		foreach (CSteamID csid in ExpectingClient) {
 			Debug.Log (SteamFriends.GetFriendPersonaName (csid));
 		}
+		SendBytes (new byte[] { (byte)3 });
 	}
 
 	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
@@ -154,12 +158,17 @@ public class NetworkManager : MonoBehaviour {
 					PlayerMachine.instance.chatAudio.clip.SetData (test, 0);
 					PlayerMachine.instance.chatAudio.Play ();
 					break;
-				default:
+				case 2:
 					char[] chars = new char[bytesRead / sizeof(char)];
 					System.Buffer.BlockCopy(dataIn, 0, chars, 0, dataIn.Length);
 
 					string message = new string(chars, 0, chars.Length);
 					Debug.Log("Received a message: " + message);
+					break;
+				case 3:
+					if (!ExpectingClient.Contains (remoteId)) {
+						ExpectingClient.Add (remoteId);
+					}
 					break;
 				}
 			}
