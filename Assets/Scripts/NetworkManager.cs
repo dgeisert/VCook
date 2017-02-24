@@ -71,14 +71,14 @@ public class NetworkManager : MonoBehaviour {
 		byte[] bytes3 = new byte[bytes.Length + bytes2.Length + 1];
 		Array.Copy (bytes, 0, bytes3, 1, bytes.Length);
 		Array.Copy (bytes2, 0, bytes3, 1 + bytes.Length, bytes2.Length);
-		bytes3 [0] = (byte)mType;
+		bytes3 [0] = (byte)((int)mType);
 		SendBytes (bytes3);
 	}
 	public void SendString(string str, InterpretationType mType){
 		byte[] bytes = StringToByte (str);
 		byte[] bytes2 = new byte[bytes.Length + 1];
 		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);
-		bytes2 [0] = (byte)mType;
+		bytes2 [0] = (byte)((int)mType);
 		SendBytes (bytes2);
 	}
 	byte[] FloatToByteArray(float[] floatArray) {
