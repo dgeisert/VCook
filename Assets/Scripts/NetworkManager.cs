@@ -236,9 +236,9 @@ public class NetworkManager : MonoBehaviour {
 		if(Input.GetKeyDown(KeyCode.I)){
 			SteamFriends.ActivateGameOverlayInviteDialog (lobbyID);
 		}
-		Talk ();
 		ReadPackets ();
 		SendMyPosition ();
+		Talk ();
 	}
 
 	void SendMyPosition(){
@@ -269,7 +269,7 @@ public class NetworkManager : MonoBehaviour {
 			var buffer = new byte[size];
 			uint bytesRead;
 			CSteamID remoteId;
-
+			Debug.Log (size);
 			if (SteamNetworking.ReadP2PPacket(buffer, size, out bytesRead, out remoteId))
 			{
 				int dataType = (int)buffer [0];
