@@ -104,4 +104,32 @@ public class PlayerMachine : StateMachine {
 			InputMachine.instance.CheckObjects ();
 		}
 	}
+
+	public ItemMachine CreateItem(GameObject baseItem, Vector3 position, Quaternion rotation, bool isLocal = false, Transform parent = null, string SetID = ""){
+		GameObject go = (GameObject) GameObject.Instantiate (baseItem);
+		ItemMachine im = go.GetComponent<ItemMachine> ();
+		if (SetID == "") {
+			im.SetID(SetID);
+		} else {
+			im.Initiate ();
+		}
+		if (parent != null) {
+			im.transform.SetParent (parent);
+			HandMachine hm = parent.GetComponentInParent<HandMachine> ();
+			if (hm != null) {
+				hm.PickUpItem (go.GetComponent<ItemMachine>());
+			}
+			if (isLocal) {
+				im.transform.localPosition = position;
+				im.transform.localRotation = rotation;
+			} else {
+				im.transform.position = position;
+				im.transform.rotation = rotation;
+			}
+		}
+		Transform t = im.transform;
+		float[] f = new float[] {t.position.x, t.position.y, t.position.z, t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z};
+		NetworkManager.instance.SendStringFloat (im.itemID, f, InterpretationType.CreateObject);
+		return im;
+	}
 }

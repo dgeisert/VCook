@@ -12,15 +12,20 @@ public class ItemMachine : StateMachine {
 	public Rigidbody rb;
 	public string itemID;
 	static string glyphs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-
-	void Start(){
-		itemID = "";
-		for (int i = 0; i < 10; i++) {
-			itemID += glyphs[Random.Range(0, glyphs.Length)];
-		}
-	}
+	public int updatePriority = 0;
 
 	public override void InstanceInitiate(StateMachine checkMachine){
+		if (itemID == null || itemID == "") {
+			itemID = "";
+			for (int i = 0; i < 10; i++) {
+				itemID += glyphs [Random.Range (0, glyphs.Length)];
+			}
+		}
+		NetworkManager.instance.allObjects.Add (itemID, this);
+	}
+	public void SetID(string SetID){
+		itemID = SetID;
+		NetworkManager.instance.allObjects.Add (itemID, this);
 	}
 
 	public override List<InputMachine> InstanceHover(){

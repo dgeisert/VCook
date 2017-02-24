@@ -297,6 +297,7 @@ public class HandMachine : InputMachine {
 			item.transform.SetParent (transform);
 			heldItem.transform.localPosition = Vector3.zero;
 			heldItem.transform.localRotation = Quaternion.identity;
+			NetworkManager.instance.SendGrab (heldItem.itemID, (int)hand);
 		}
 	}
 	public void PlaceObject(SurfaceMachine surface){

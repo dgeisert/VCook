@@ -17,17 +17,6 @@ public class SurfaceMachine : StateMachine {
 
 	public override void InstanceInitiate(StateMachine checkMachine){
 		secondaryTimer = new Timer (this);
-		if (spawnSpecialOnStart && specialHold.Count > 0) {
-			GameObject go = (GameObject) GameObject.Instantiate (specialHold [0].gameObject);
-			SetItem (go.GetComponent<ItemMachine> ());
-			if (transformationType == TransformationType.Bin) {
-				go.transform.localScale = Vector3.one;
-				go.transform.localRotation = Quaternion.identity;
-				foreach (Collider col in go.GetComponentsInChildren<Collider>()) {
-					Destroy (col);
-				}
-			}
-		}
 	}
 
 	public override List<InputMachine> InstanceHover(){
@@ -38,8 +27,7 @@ public class SurfaceMachine : StateMachine {
 		switch (transformationType) {
 		case TransformationType.Bin:
 			if (hand.heldItem == null && heldItem == null) {
-				GameObject go = (GameObject)GameObject.Instantiate (specialHold [0].gameObject);
-				hand.PickUpItem (go.GetComponent<ItemMachine>());
+				hand.PickUpItem (PlayerMachine.instance.CreateItem (specialHold [0].gameObject, Vector3.zero, Quaternion.identity, true, hand.transform));
 				return true;
 			}
 			break;
