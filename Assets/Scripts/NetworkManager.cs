@@ -145,6 +145,13 @@ public class NetworkManager : MonoBehaviour {
 
 	public void SendBytes(byte[] bytes){
 		foreach (CSteamID csid in ExpectingClient) {
+			SteamNetworking.SendP2PPacket(csid, bytes, (uint) bytes.Length, EP2PSend.k_EP2PSendUnreliableNoDelay);
+		}
+	}
+
+	public void SendBytesReliable(byte[] bytes){
+		foreach (CSteamID csid in ExpectingClient) {
+			Debug.Log("Sending to: " + SteamFriends.GetFriendPersonaName (csid));
 			SteamNetworking.SendP2PPacket(csid, bytes, (uint) bytes.Length, EP2PSend.k_EP2PSendReliable);
 		}
 	}
@@ -156,7 +163,6 @@ public class NetworkManager : MonoBehaviour {
 	public void OnLobbyCreated(LobbyCreated_t lobbyCreated){
 		host = SteamUser.GetSteamID ();
 		lobbyID = new CSteamID (lobbyCreated.m_ulSteamIDLobby);
-		SteamFriends.ActivateGameOverlayInviteDialog (lobbyID);
 		Debug.Log ("Lobby Created");
 	}
 	public bool IsHost(){
@@ -169,7 +175,9 @@ public class NetworkManager : MonoBehaviour {
 
 	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
 		Debug.Log ("Lobby Entered");
+		PlayerMachine.instance.chatAudio.clip = AudioClip.Create ("chat", 11025, 1, 11025, false, true);
 		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
+		CheckLobby ();
 	}
 
 	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
@@ -190,7 +198,7 @@ public class NetworkManager : MonoBehaviour {
 		foreach (CSteamID csid in ExpectingClient) {
 			Debug.Log (SteamFriends.GetFriendPersonaName (csid));
 		}
-		SendBytes (new byte[] { (byte)0 });
+		SendBytesReliable (new byte[] { (byte)0, (byte)1});
 	}
 
 	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
@@ -269,7 +277,6 @@ public class NetworkManager : MonoBehaviour {
 			var buffer = new byte[size];
 			uint bytesRead;
 			CSteamID remoteId;
-			Debug.Log (size);
 			if (SteamNetworking.ReadP2PPacket(buffer, size, out bytesRead, out remoteId))
 			{
 				int dataType = (int)buffer [0];
@@ -286,7 +293,6 @@ public class NetworkManager : MonoBehaviour {
 					byte[] bufferOut = new byte[22050];
 					uint bytesOut;
 					EVoiceResult voiceOut = SteamUser.DecompressVoice (dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
-					PlayerMachine.instance.chatAudio.clip = AudioClip.Create ("chat", 11025, 1, 11025, false, false);
 					float[] test = new float[11025];
 					for (int i = 0; i < test.Length; ++i) {
 						test[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
