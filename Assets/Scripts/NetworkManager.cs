@@ -175,7 +175,7 @@ public class NetworkManager : MonoBehaviour {
 
 	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
 		Debug.Log ("Lobby Entered");
-		PlayerMachine.instance.chatAudio.clip = AudioClip.Create ("chat", 11025, 1, 11025, false, true);
+		PlayerMachine.instance.chatAudio.clip = AudioClip.Create ("chat", 11025, 1, 11025, false, false);
 		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
 		CheckLobby ();
 	}
@@ -245,6 +245,9 @@ public class NetworkManager : MonoBehaviour {
 			SteamFriends.ActivateGameOverlayInviteDialog (lobbyID);
 		}
 		ReadPackets ();
+	}
+
+	public void FixedUpdate(){
 		SendMyPosition ();
 		Talk ();
 	}
@@ -274,7 +277,6 @@ public class NetworkManager : MonoBehaviour {
 		uint size;
 		while (SteamNetworking.IsP2PPacketAvailable(out size))
 		{
-			Debug.Log ("packet");
 			var buffer = new byte[size];
 			uint bytesRead;
 			CSteamID remoteId;
