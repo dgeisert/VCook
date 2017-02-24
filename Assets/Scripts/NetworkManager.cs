@@ -78,6 +78,7 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
+		CheckLobby ();
 		Debug.Log ("Lobby Info");
 		SteamUser.StartVoiceRecording ();
 	}
@@ -114,7 +115,6 @@ public class NetworkManager : MonoBehaviour {
 
 	public void Update(){
 		SteamAPI.RunCallbacks ();
-		CheckLobby ();
 		if(Input.GetKeyDown(KeyCode.S)){
 			SetupServer ();
 		}
@@ -122,19 +122,16 @@ public class NetworkManager : MonoBehaviour {
 			SteamFriends.ActivateGameOverlayInviteDialog (lobbyID);
 		}
 		if(Input.GetKeyDown(KeyCode.C)){
-			SetupServer ();
+			SendString ("HI!");
 		}
 		Talk ();
 		ReadPackets ();
 	}
 	public void ReadPackets(){
 		uint size;
-
-		// repeat while there's a P2P message available
-		// will write its size to size variable
 		while (SteamNetworking.IsP2PPacketAvailable(out size))
 		{
-			
+			Debug.Log (size);
 			var buffer = new byte[size];
 			uint bytesRead;
 			CSteamID remoteId;
@@ -146,7 +143,6 @@ public class NetworkManager : MonoBehaviour {
 				Array.Copy (buffer, 1, dataIn, 0, size - 1);
 				switch (dataType) {
 				case 1:
-					Debug.Log ("got audio");
 					byte[] bufferOut = new byte[22050];
 					uint bytesOut;
 					EVoiceResult voiceOut = SteamUser.DecompressVoice (dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
@@ -159,7 +155,6 @@ public class NetworkManager : MonoBehaviour {
 					PlayerMachine.instance.chatAudio.Play ();
 					break;
 				default:
-					// convert to string
 					char[] chars = new char[bytesRead / sizeof(char)];
 					System.Buffer.BlockCopy(dataIn, 0, chars, 0, dataIn.Length);
 
