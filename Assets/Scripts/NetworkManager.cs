@@ -80,6 +80,9 @@ public class NetworkManager : MonoBehaviour {
 	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
 		Debug.Log ("Lobby Info");
 		SteamUser.StartVoiceRecording ();
+	}
+
+	public void CheckLobby(){
 		ExpectingClient = new List<CSteamID> ();
 		int lobbyCount = SteamMatchmaking.GetNumLobbyMembers (lobbyID);
 		for (int i = 0; i < lobbyCount; i++) {
@@ -110,6 +113,8 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	public void Update(){
+		SteamAPI.RunCallbacks ();
+		CheckLobby ();
 		if(Input.GetKeyDown(KeyCode.S)){
 			SetupServer ();
 		}
