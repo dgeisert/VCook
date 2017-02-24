@@ -274,6 +274,7 @@ public class NetworkManager : MonoBehaviour {
 		uint size;
 		while (SteamNetworking.IsP2PPacketAvailable(out size))
 		{
+			Debug.Log ("packet");
 			var buffer = new byte[size];
 			uint bytesRead;
 			CSteamID remoteId;
