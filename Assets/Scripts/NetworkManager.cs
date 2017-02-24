@@ -6,13 +6,13 @@ using UnityEngine;
 using Steamworks;
 
 public enum InterpretationType {
-	Ping = 0,
 	Voice = 1,
 	PlayerObjects = 2,
 	CreateObject = 3,
 	GrabObject = 4,
 	DestroyObject = 5,
-	UpdateObjects = 6
+	UpdateObjects = 6,
+	Ping = 7
 }
 
 public class NetworkManager : MonoBehaviour {
@@ -198,7 +198,7 @@ public class NetworkManager : MonoBehaviour {
 		foreach (CSteamID csid in ExpectingClient) {
 			Debug.Log (SteamFriends.GetFriendPersonaName (csid));
 		}
-		SendBytesReliable (new byte[] { (byte)0, (byte)1});
+		SendBytesReliable (new byte[] { (byte)7});
 	}
 
 	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
@@ -283,7 +283,7 @@ public class NetworkManager : MonoBehaviour {
 				byte[] dataIn = new byte[size - 1];
 				Array.Copy (buffer, 1, dataIn, 0, size - 1);
 				switch (dataType) {
-				case 0://ping
+				case 7://ping
 					Debug.Log("ping");
 					if (!ExpectingClient.Contains (remoteId)) {
 						ExpectingClient.Add (remoteId);
