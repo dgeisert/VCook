@@ -136,7 +136,9 @@ public class HandMachine : InputMachine {
 
 	KeyValuePair<Vector3, GameObject> GetSightedPoint(Transform raycastTransform){
 		if (touchedObject != null) {
-			return new KeyValuePair<Vector3, GameObject> (touchedObject.transform.position, touchedObject.gameObject);
+			if (touchedObject.GetComponent<Ground> () != null && touchedObject.GetComponent<Platform> () != null) {
+				return new KeyValuePair<Vector3, GameObject> (touchedObject.transform.position, touchedObject.gameObject);
+			}
 		}
 		RaycastHit hit;
 		Ray inputRay = new Ray(raycastTransform.position, raycastTransform.forward);
