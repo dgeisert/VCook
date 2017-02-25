@@ -108,8 +108,10 @@ public class PlayerMachine : StateMachine {
 	public ItemMachine CreateItem(GameObject baseItem, Vector3 position, Quaternion rotation, bool isLocal = false, Transform parent = null, string SetID = ""){
 		GameObject go = (GameObject) GameObject.Instantiate (baseItem);
 		ItemMachine im = go.GetComponent<ItemMachine> ();
-		if (SetID == "") {
-			im.SetID(SetID);
+		if (SetID != "") {
+			if (!NetworkManager.instance.allObjects.ContainsKey (SetID)) {
+				im.SetID (SetID);
+			}
 		} else {
 			im.Initiate ();
 		}

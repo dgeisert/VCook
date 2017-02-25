@@ -6,9 +6,9 @@ using Holoville.HOTween;
 
 [System.Serializable]
 public enum Hand {
-	Right,
-	Left,
-	Headset
+	Right = 1,
+	Left = 2,
+	Headset = 0
 }
 public enum InteractionButton {
 	Trigger,
@@ -167,10 +167,12 @@ public class HandMachine : InputMachine {
 				is_distant = sightedObject != touchedObject.gameObject;
 			}
 			if (controller.GetHairTriggerDown()) {
+				ADMIN.instance.SetText ("TriggerDown");
 				holdStart = Time.time;
 				GetCurrentState ().Tap (sightedObject, sightedPoint, this, InteractionButton.Trigger, is_distant);
 			}
 			if (controller.GetHairTriggerUp()) {
+				ADMIN.instance.SetText ("TriggerUp");
 				if (!is_swipe) {
 					GetCurrentState ().Release (sightedObject, sightedPoint, this, InteractionButton.Trigger, is_distant);
 				}
@@ -192,15 +194,26 @@ public class HandMachine : InputMachine {
 					heldItem = null;
 				}
 			}
-			if (controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_A)) {
+			if (controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_A) 
+				|| controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad)) {
+				ADMIN.instance.SetText ("ADown");
 				UpdateState (StateMaster.instance.inputTeleport, this);
+				reticle.UpdateState (StateMaster.instance.inputTeleport, this);
 				holdStart = Time.time;
 				GetCurrentState ().Tap (sightedObject, sightedPoint, this, InteractionButton.A, is_distant);
 			}
-			if (controller.GetPressUp(Valve.VR.EVRButtonId.k_EButton_A)) {
+			if (controller.GetPressUp(Valve.VR.EVRButtonId.k_EButton_A)
+				|| controller.GetPressUp(Valve.VR.EVRButtonId.k_EButton_SteamVR_Touchpad)) {
+				ADMIN.instance.SetText ("AUp");
 				if (!is_swipe) {
 					GetCurrentState ().Release (sightedObject, sightedPoint, this, InteractionButton.A, is_distant);
 				}
+			}
+			if (controller.GetPressDown(Valve.VR.EVRButtonId.k_EButton_ApplicationMenu)) {
+				ADMIN.instance.SetText ("BDown");
+			}
+			if (controller.GetPressUp(Valve.VR.EVRButtonId.k_EButton_ApplicationMenu)) {
+				ADMIN.instance.SetText ("BUp");
 			}
 		}
 		if (is_holding) {
@@ -284,6 +297,9 @@ public class HandMachine : InputMachine {
 	}
 
 	public void PickUpItem(ItemMachine item){
+		if (item.holdingHand != null) {
+			return;
+		}
 		if (heldItem != null) {
 			RecipeManager.instance.RecipeOutput (heldItem, item);
 		} else {

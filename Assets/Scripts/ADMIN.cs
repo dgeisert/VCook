@@ -3,6 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class ADMIN : StateMachine {
+
+	public static ADMIN instance;
+
+	void Start(){
+		ADMIN.instance = this;
+	}
 	
 	public override List<InputMachine> InstanceHover(){
 		return new List<InputMachine>(){StateMaster.instance.inputInteract };
@@ -13,17 +19,7 @@ public class ADMIN : StateMachine {
 	public override bool InstancePoke(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
 		return true;
 	}
-
-	public override void InstanceUpdate(StateMachine checkMachine){
-		switch (action) {
-		case "SetText":
-			SetText ();
-			break;
-		default:
-			break;
-		}
-	}
-	public void SetText(){
-		GetComponent<TextMesh> ().text = "Coins: " + PlayerMachine.instance.GetResource ("COINS");
+	public void SetText(string txt){
+		GetComponent<TextMesh> ().text = txt;
 	}
 }

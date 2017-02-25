@@ -1,15 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-public class Platform : MonoBehaviour {
+public class Platform : StateMachine {
 
-	// Use this for initialization
-	void Start () {
-	
+	public void Interact(RaycastHit hit){
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
+	public override List<InputMachine> InstanceHover(){
+		return new List<InputMachine>(){StateMaster.instance.inputTeleport};
 	}
 }
