@@ -301,6 +301,29 @@ public class NetworkManager : MonoBehaviour {
 		Array.Copy (stringBytes, 0, bytes, 2, stringBytes.Length);
 		SendBytes (bytes);
 	}
+	public void SendRelease(string itemID, int hand, ItemMachine im){
+		byte[] stringBytes = StringToByte (itemID);
+		byte[] floatBytes = FloatToByteArray (new float[] {
+			im.transform.position.x
+			,im.transform.position.y
+			,im.transform.position.z
+			,im.transform.rotation.w
+			,im.transform.rotation.x
+			,im.transform.rotation.y
+			,im.transform.rotation.z
+			,im.rb.velocity.x
+			,im.rb.velocity.y
+			,im.rb.velocity.z
+			,im.rb.angularVelocity.x
+			,im.rb.angularVelocity.y
+			,im.rb.angularVelocity.z});
+		byte[] bytes = new byte[stringBytes.Length + 2 + floatBytes.Length];
+		bytes[0] = (byte)((int)InterpretationType.GrabObject);
+		bytes[1] = (byte)((int)hand);
+		Array.Copy (stringBytes, 0, bytes, 2, stringBytes.Length);
+		Array.Copy (floatBytes, 0, bytes, 2 + stringBytes.Length, floatBytes.Length);
+		SendBytes (bytes);
+	}
 
 	Dictionary<string, float> timestamps = new Dictionary<string, float>();
 	public void ReadPackets(){

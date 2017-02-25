@@ -136,7 +136,7 @@ public class HandMachine : InputMachine {
 
 	KeyValuePair<Vector3, GameObject> GetSightedPoint(Transform raycastTransform){
 		if (touchedObject != null) {
-			if (touchedObject.GetComponent<Ground> () != null && touchedObject.GetComponent<Platform> () != null) {
+			if (touchedObject.GetComponent<Ground> () == null && touchedObject.GetComponent<Platform> () == null) {
 				return new KeyValuePair<Vector3, GameObject> (touchedObject.transform.position, touchedObject.gameObject);
 			}
 		}
