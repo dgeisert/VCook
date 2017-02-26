@@ -5,6 +5,12 @@ using UnityEngine;
 public class OtherPlayerObject : MonoBehaviour {
 
 	public Transform head, left, right;
+    public AudioSource chatAudio;
+
+    public void Init()
+    {
+        chatAudio.clip = AudioClip.Create("chat", 11025, 1, 11025, false, false);
+    }
 
 	public void InterpretLocation(float[] f){
 		if (f.Length == 21) {

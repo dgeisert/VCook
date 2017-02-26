@@ -199,7 +199,6 @@ public class NetworkManager : MonoBehaviour {
 
 	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
 		Debug.Log ("Lobby Entered");
-		PlayerMachine.instance.chatAudio.clip = AudioClip.Create ("chat", 11025, 1, 11025, false, false);
 		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
 		CheckLobby ();
 	}
@@ -325,6 +324,13 @@ public class NetworkManager : MonoBehaviour {
 		SendBytes (bytes);
 	}
 
+    void CreateOtherPlayer(CSteamID csid)
+    {
+        GameObject go = (GameObject)GameObject.Instantiate(otherPlayerObject);
+        otherPlayers[csid.m_SteamID] = go.GetComponent<OtherPlayerObject>();
+        go.GetComponent<OtherPlayerObject>().Init();
+    }
+
 	Dictionary<string, float> timestamps = new Dictionary<string, float>();
 	public void ReadPackets(){
 		uint size;
@@ -349,6 +355,13 @@ public class NetworkManager : MonoBehaviour {
 					}
 					break;
 				case 1://voice
+					if (otherPlayers.ContainsKey (remoteId.m_SteamID)) {
+						if (otherPlayers [remoteId.m_SteamID] == null) {
+                            CreateOtherPlayer(remoteId);
+						}
+					} else {
+                        CreateOtherPlayer(remoteId);
+                    }
 					byte[] bufferOut = new byte[22050];
 					uint bytesOut;
 					EVoiceResult voiceOut = SteamUser.DecompressVoice (dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
@@ -356,8 +369,8 @@ public class NetworkManager : MonoBehaviour {
 					for (int i = 0; i < test.Length; ++i) {
 						test[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
 					}
-					PlayerMachine.instance.chatAudio.clip.SetData (test, 0);
-					PlayerMachine.instance.chatAudio.Play ();
+                    otherPlayers[remoteId.m_SteamID].chatAudio.clip.SetData (test, 0);
+                    otherPlayers[remoteId.m_SteamID].chatAudio.Play ();
 					break;
 				case 2://person update, head and hands
 					if (timestamps.ContainsKey (remoteId.m_SteamID.ToString () + dataType.ToString ())) {
@@ -369,13 +382,11 @@ public class NetworkManager : MonoBehaviour {
 					}
 					if (otherPlayers.ContainsKey (remoteId.m_SteamID)) {
 						if (otherPlayers [remoteId.m_SteamID] == null) {
-							GameObject go = (GameObject)GameObject.Instantiate (otherPlayerObject);
-							otherPlayers [remoteId.m_SteamID] = go.GetComponent<OtherPlayerObject> ();
+                            CreateOtherPlayer(remoteId);
 						}
 					} else {
-						GameObject go = (GameObject)GameObject.Instantiate (otherPlayerObject);
-						otherPlayers.Add(remoteId.m_SteamID, go.GetComponent<OtherPlayerObject> ());
-					}
+                        CreateOtherPlayer(remoteId);
+                    }
 					otherPlayers [remoteId.m_SteamID].InterpretLocation (ByteToFloatArray (dataIn));
 					break;
 				case 3://instantiate object

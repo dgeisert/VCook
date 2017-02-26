@@ -9,7 +9,6 @@ public class PlayerMachine : MonoBehaviour {
 	public Transform headset, left, right;
 	private Dictionary<string, int> resources;
 	private Dictionary<string, GameObject> loadedResources;
-	public AudioSource chatAudio;
 	public GameObject timerObject;
 
 	public void Start(){
