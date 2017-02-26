@@ -29,12 +29,12 @@ public class AreaStartStateMachine : StateMachine {
 			}
 			Vector3 startPosition = transform.position;
 			GameObject go = (GameObject) GameObject.Instantiate (usedRig, startPosition, transform.rotation);
-			go.GetComponent<PlayerMachine> ().Initiate ();
+			go.GetComponent<PlayerMachine> ().Init ();
 		} else {
 			if (PlayerMachine.instance == null) {
 				PlayerMachine.instance = FindObjectOfType<PlayerMachine> ();
 			}
-			PlayerMachine.instance.Initiate ();
+			PlayerMachine.instance.Init();
 		}
 		StartCoroutine ("SetRooms");	
 	}

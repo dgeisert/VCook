@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class PlayerMachine : StateMachine {
+public class PlayerMachine : MonoBehaviour {
 
 	public static GameObject playerObject;
 	public static PlayerMachine instance;
@@ -13,10 +13,10 @@ public class PlayerMachine : StateMachine {
 	public GameObject timerObject;
 
 	public void Start(){
-		Initiate ();
+		Init ();
 	}
 
-	public override void InstanceInitiate(StateMachine checkMachine){
+	public void Init(){
 		PlayerMachine.playerObject = gameObject;
 		PlayerMachine.instance = this;
 		DontDestroyOnLoad (gameObject);
@@ -86,9 +86,20 @@ public class PlayerMachine : StateMachine {
 				im.SetID (SetID);
 			}
 		} else {
-			im.Initiate ();
+			im.Init ();
 		}
 		Transform t = im.transform;
+        t.SetParent(parent);
+        if (isLocal)
+        {
+            t.localPosition = position;
+            t.localRotation = rotation;
+        }
+        else
+        {
+            t.position = position;
+            t.rotation = rotation;
+        }
 		float[] f = new float[] {t.position.x, t.position.y, t.position.z, t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z};
 		NetworkManager.instance.SendStringFloat (im.itemID, f, InterpretationType.CreateObject);
 		return im;

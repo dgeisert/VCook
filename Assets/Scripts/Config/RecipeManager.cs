@@ -44,30 +44,10 @@ public class RecipeManager : MonoBehaviour {
 			return;
 		}
 		Recipe r = RecipeChecker [heldItem.itemName + surfaceItem.itemName];
-		GameObject toHandObject = (GameObject)GameObject.Instantiate (r.outC.gameObject);
-		/*
-		if (heldItem.holdingHand != null) {
-			heldItem.holdingHand.heldItem = null;
-			heldItem.holdingHand.PickUpItem (toHandObject.GetComponent<ItemMachine> ());
-		} else if (heldItem.holdingSurface != null) {
-			heldItem.holdingSurface.SetItem (toHandObject.GetComponent<ItemMachine> ());
-		} else {
-			toHandObject.transform.position = heldItem.transform.position;
-			toHandObject.transform.rotation = heldItem.transform.rotation;
-		}
+        PlayerMachine.instance.CreateItem(r.outC.gameObject, heldItem.transform.position, heldItem.transform.rotation, false, heldItem.transform.parent);
 		if (r.outD != null) {
-			GameObject toSurfaceObject = (GameObject)GameObject.Instantiate (r.outD.gameObject);
-			if (surfaceItem.holdingHand != null) {
-				surfaceItem.holdingHand.heldItem = null;
-				surfaceItem.holdingHand.PickUpItem (toSurfaceObject.GetComponent<ItemMachine> ());
-			} else if (surfaceItem.holdingSurface != null) {
-				surfaceItem.holdingSurface.SetItem (toSurfaceObject.GetComponent<ItemMachine> ());
-			} else {
-				toSurfaceObject.transform.position = surfaceItem.transform.position;
-				toSurfaceObject.transform.rotation = surfaceItem.transform.rotation;
-			}
+            PlayerMachine.instance.CreateItem(r.outD.gameObject, surfaceItem.transform.position, surfaceItem.transform.rotation, false, surfaceItem.transform.parent);
 		}
-		*/
 		Destroy (heldItem.gameObject);
 		Destroy (surfaceItem.gameObject);
 	}
