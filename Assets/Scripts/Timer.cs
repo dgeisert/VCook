@@ -25,7 +25,7 @@ public class Timer {
 		timerStart = DateTime.Now;
 		if (hasTimerObject) {
 			if (timerObject == null) {
-				GameObject go = (GameObject) GameObject.Instantiate(StateMaster.instance.timer);
+				GameObject go = (GameObject) GameObject.Instantiate(PlayerMachine.instance.timerObject);
 				timerObject = go.GetComponent<TimerObject> ();
 				if (parent != null) {
 					go.transform.SetParent (parent);

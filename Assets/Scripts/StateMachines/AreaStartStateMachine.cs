@@ -6,7 +6,6 @@ public class AreaStartStateMachine : StateMachine {
 
 	public GameObject eventSystem;
 	public GameObject usedRig;
-	public RoomMachine startRoom;
 	public static AreaStartStateMachine instance;
 	public void Awake(){
 		AreaStartStateMachine.instance = this;
@@ -20,9 +19,6 @@ public class AreaStartStateMachine : StateMachine {
 	public override void ExitState(StateMachine checkMachine){}
 	public override void EnterState(StateMachine checkMachine){}
 	public override void InstanceInitiate(StateMachine checkMachine){
-		foreach (MovingGround mg in GameObject.FindObjectsOfType<MovingGround>()) {
-			mg.Setup ();
-		}
 		if (eventSystem == null) {
 			eventSystem = (GameObject) Resources.Load("EventSystem", typeof(GameObject));
 		}
@@ -41,13 +37,5 @@ public class AreaStartStateMachine : StateMachine {
 			PlayerMachine.instance.Initiate ();
 		}
 		StartCoroutine ("SetRooms");	
-	}
-	IEnumerator SetRooms(){
-		yield return null;
-		foreach (RoomMachine room in FindObjectsOfType<RoomMachine> ()) {
-			InputMachine.instance.rooms.Add (room);
-			room.gameObject.SetActive (false);
-		}
-		InputMachine.instance.SetRoom (startRoom);
 	}
 }

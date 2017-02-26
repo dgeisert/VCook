@@ -17,15 +17,15 @@ public class OtherPlayerObject : MonoBehaviour {
 		}
 	}
 
-	public void GrabObject(ItemMachine im, Hand hand){
+	public void GrabObject(ItemMachine im, int hand){
 		switch (hand) {
-		case Hand.Headset:
+		case 0:
 			im.transform.SetParent (head);
 			break;
-		case Hand.Left:
+		case 2:
 			im.transform.SetParent (left);
 			break;
-		case Hand.Right:
+		case 1:
 			im.transform.SetParent (right);
 			break;
 		default:
@@ -33,14 +33,11 @@ public class OtherPlayerObject : MonoBehaviour {
 		}
 		im.rb.isKinematic = true;
 		im.rb.useGravity = false;
-		if (im.holdingSurface != null) {
-			im.holdingSurface.RemoveItem (im);
-		}
 		im.transform.localPosition = Vector3.zero;
 		im.transform.localRotation = Quaternion.identity;
 	}
 
-	public void ReleaseObject(ItemMachine im, Hand hand, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel){
+	public void ReleaseObject(ItemMachine im, int hand, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel){
 		im.transform.SetParent (null);
 		im.rb.isKinematic = false;
 		im.rb.useGravity = true;

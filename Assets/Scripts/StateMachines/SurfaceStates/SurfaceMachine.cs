@@ -19,11 +19,8 @@ public class SurfaceMachine : StateMachine {
 		secondaryTimer = new Timer (this);
 	}
 
-	public override List<InputMachine> InstanceHover(){
-		return new List<InputMachine>(){StateMaster.instance.inputPickUp };
-	}
-
-	public override bool InstanceGrab(GameObject obj, Vector3 point, StateMachine checkMachine, HandMachine hand){
+	public void Grab(){
+		/*
 		switch (transformationType) {
 		case TransformationType.Bin:
 			if (hand.heldItem == null && heldItem == null) {
@@ -44,7 +41,7 @@ public class SurfaceMachine : StateMachine {
 			hand.PlaceObject(this);
 			break;
 		}
-		return true;
+		*/
 	}
 
 	public bool SellItem(ItemMachine item){
@@ -64,7 +61,6 @@ public class SurfaceMachine : StateMachine {
 				specialHeldItem = item;
 				specialHeldItem.rb.isKinematic = true;
 				specialHeldItem.rb.useGravity = false;
-				specialHeldItem.holdingSurface = this;
 				specialHeldItem.transform.SetParent (specialHoldPosition);
 				specialHeldItem.transform.localPosition = Vector3.zero;
 				specialHeldItem.transform.localEulerAngles = new Vector3 (0, specialHeldItem.transform.localEulerAngles.y, 0);
@@ -74,7 +70,6 @@ public class SurfaceMachine : StateMachine {
 		heldItem = item;
 		heldItem.rb.isKinematic = true;
 		heldItem.rb.useGravity = false;
-		heldItem.holdingSurface = this;
 		heldItem.transform.SetParent (holdPosition);
 		heldItem.transform.localPosition = Vector3.zero;
 		heldItem.transform.localEulerAngles = new Vector3 (0, heldItem.transform.localEulerAngles.y, 0);
@@ -89,7 +84,6 @@ public class SurfaceMachine : StateMachine {
 			if (heldItem.itemName == item.itemName) {
 				heldItem.rb.isKinematic = false;
 				heldItem.rb.useGravity = true;
-				heldItem.holdingSurface = null;
 				heldItem = null;
 				return;
 			}
@@ -98,7 +92,6 @@ public class SurfaceMachine : StateMachine {
 			if (specialHeldItem.itemName == item.itemName) {
 				specialHeldItem.rb.isKinematic = false;
 				specialHeldItem.rb.useGravity = true;
-				specialHeldItem.holdingSurface = null;
 				specialHeldItem = null;
 				return;
 			}

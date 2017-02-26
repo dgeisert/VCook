@@ -37,6 +37,7 @@ public class TransformationManager : MonoBehaviour {
 				item.phase++;
 				if (item.phase >= item.phases) {
 					GameObject go = (GameObject)GameObject.Instantiate (TransformationChecker [item.itemName + heldItem.transformationType.ToString ()].outItem.gameObject);
+					/*
 					if (item.holdingHand != null) {
 						item.holdingHand.heldItem = null;
 						item.holdingHand.PickUpItem (go.GetComponent<ItemMachine> ());
@@ -48,6 +49,7 @@ public class TransformationManager : MonoBehaviour {
 						go.transform.rotation = item.transform.rotation;
 					}
 					Destroy (item.gameObject);
+					*/
 					return true;
 				}
 				return true;
@@ -65,6 +67,7 @@ public class TransformationManager : MonoBehaviour {
 				item.phase++;
 				if (item.phase >= item.phases) {
 					GameObject go = (GameObject)GameObject.Instantiate (TransformationChecker [item.itemName + surface.transformationType.ToString ()].outItem.gameObject);
+					/*
 					if (item.holdingHand != null) {
 						item.holdingHand.heldItem = null;
 						item.holdingHand.PickUpItem (go.GetComponent<ItemMachine> ());
@@ -75,6 +78,7 @@ public class TransformationManager : MonoBehaviour {
 						go.transform.position = item.transform.position;
 						go.transform.rotation = item.transform.rotation;
 					}
+					*/
 					Destroy (item.gameObject);
 					return true;
 				}

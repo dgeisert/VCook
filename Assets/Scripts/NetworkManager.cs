@@ -283,9 +283,9 @@ public class NetworkManager : MonoBehaviour {
 
 	void SendMyPosition(){
 		byte[] bytes = ItemsPositionBytes(new List<Transform> {
-			InputMachine.instance.Headset.transform
-			, InputMachine.instance.Right.transform
-			, InputMachine.instance.Left.transform
+			PlayerMachine.instance.headset
+			, PlayerMachine.instance.right
+			, PlayerMachine.instance.left
 		});
 		byte[] bytes2 = new byte[bytes.Length + 1];
 		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);
@@ -393,7 +393,7 @@ public class NetworkManager : MonoBehaviour {
 					Debug.Log("Grab");
 					byte[] grabBytes = new byte[dataIn.Length - 1];
 					Array.Copy (dataIn, 1, grabBytes, 0, grabBytes.Length);
-					otherPlayers [remoteId.m_SteamID].GrabObject (allObjects [ByteToString (grabBytes)], (Hand)dataIn [0]);
+					otherPlayers [remoteId.m_SteamID].GrabObject (allObjects [ByteToString (grabBytes)], (int)dataIn [0]);
 					break;
 				case 5://other player releases object
 					Debug.Log ("Release");
@@ -406,7 +406,7 @@ public class NetworkManager : MonoBehaviour {
 					Quaternion relRot = new Quaternion (releaseFloats [3], releaseFloats [4], releaseFloats [5], releaseFloats [6]);
 					Vector3 relVel = new Vector3 (releaseFloats [7], releaseFloats [8], releaseFloats [9]);
 					Vector3 relAngVel = new Vector3 (releaseFloats [10], releaseFloats [11], releaseFloats [12]);
-					otherPlayers [remoteId.m_SteamID].ReleaseObject (allObjects [ByteToString (releaseBytesID)], (Hand)dataIn [0], relPos, relRot, relVel, relAngVel);
+					otherPlayers [remoteId.m_SteamID].ReleaseObject (allObjects [ByteToString (releaseBytesID)], (int)dataIn [0], relPos, relRot, relVel, relAngVel);
 					break;
 				case 6://destroy object
 					Debug.Log ("Destroy");

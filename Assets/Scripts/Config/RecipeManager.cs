@@ -45,6 +45,7 @@ public class RecipeManager : MonoBehaviour {
 		}
 		Recipe r = RecipeChecker [heldItem.itemName + surfaceItem.itemName];
 		GameObject toHandObject = (GameObject)GameObject.Instantiate (r.outC.gameObject);
+		/*
 		if (heldItem.holdingHand != null) {
 			heldItem.holdingHand.heldItem = null;
 			heldItem.holdingHand.PickUpItem (toHandObject.GetComponent<ItemMachine> ());
@@ -66,6 +67,7 @@ public class RecipeManager : MonoBehaviour {
 				toSurfaceObject.transform.rotation = surfaceItem.transform.rotation;
 			}
 		}
+		*/
 		Destroy (heldItem.gameObject);
 		Destroy (surfaceItem.gameObject);
 	}
