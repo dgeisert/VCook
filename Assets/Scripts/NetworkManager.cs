@@ -170,7 +170,7 @@ public class NetworkManager : MonoBehaviour {
 		Array.Copy (bytes, 0, toSend, 4, bytes.Length);
 		Array.Copy(FloatToByteArray(new float[] {Time.time}) , 0, toSend, 0, 4);
 		foreach (ulong csid in ExpectingClient) {
-			SteamNetworking.SendP2PPacket(new CSteamID(csid), bytes, (uint) bytes.Length, EP2PSend.k_EP2PSendUnreliableNoDelay);
+			SteamNetworking.SendP2PPacket(new CSteamID(csid), toSend, (uint)toSend.Length, EP2PSend.k_EP2PSendUnreliableNoDelay);
 		}
 	}
 
@@ -179,7 +179,7 @@ public class NetworkManager : MonoBehaviour {
 		Array.Copy (bytes, 0, toSend, 4, bytes.Length);
 		Array.Copy(FloatToByteArray(new float[] {Time.time}) , 0, toSend, 0, 4);
 		foreach (ulong csid in ExpectingClient) {
-			SteamNetworking.SendP2PPacket(new CSteamID(csid), bytes, (uint) bytes.Length, EP2PSend.k_EP2PSendReliable);
+			SteamNetworking.SendP2PPacket(new CSteamID(csid), toSend, (uint)toSend.Length, EP2PSend.k_EP2PSendReliable);
 		}
 	}
 
@@ -342,7 +342,6 @@ public class NetworkManager : MonoBehaviour {
 				byte[] timestampBytes = new byte[4];
 				Array.Copy (buffer, 0, timestampBytes, 0, 4);
 				float timestamp = ByteToFloatArray (timestampBytes) [0];
-                Debug.Log(timestamp);
 				byte[] dataIn = new byte[size - 5];
 				Array.Copy (buffer, 5, dataIn, 0, size - 5);
 				switch (dataType) {
