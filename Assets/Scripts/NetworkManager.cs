@@ -115,8 +115,8 @@ public class NetworkManager : MonoBehaviour {
 		return byteArray;
 	}
 	float[] ByteToFloatArray(byte[] byteArray) {
-		int len = byteArray.Length / 4;
-		float[] floatArray = new float[len];
+		float len = byteArray.Length / 4;
+		float[] floatArray = new float[Mathf.FloorToInt(len)];
 		for (int i = 0; i < byteArray.Length; i+=4) {
 			floatArray[i/4] = System.BitConverter.ToSingle(byteArray, i);
 		}
@@ -175,6 +175,9 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	public void SendBytesReliable(byte[] bytes){
+		byte[] toSend = new byte[bytes.Length + 4];
+		Array.Copy (bytes, 0, toSend, 4, bytes.Length);
+		Array.Copy(FloatToByteArray(new float[] {Time.time}) , 0, toSend, 0, 4);
 		foreach (ulong csid in ExpectingClient) {
 			SteamNetworking.SendP2PPacket(new CSteamID(csid), bytes, (uint) bytes.Length, EP2PSend.k_EP2PSendReliable);
 		}
@@ -200,12 +203,12 @@ public class NetworkManager : MonoBehaviour {
 	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
 		Debug.Log ("Lobby Entered");
 		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
-		CheckLobby ();
+        SteamUser.StartVoiceRecording();
+        CheckLobby ();
 	}
 
 	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
 		Debug.Log ("Lobby Info");
-		SteamUser.StartVoiceRecording ();
 	}
 
 	public void CheckLobby(){
@@ -228,12 +231,6 @@ public class NetworkManager : MonoBehaviour {
 			foreach (ulong csid in endConnections) {
 				EndConnection (csid);
 			}
-			/*
-			foreach (CSteamID csid in ExpectingClient) {
-				Debug.Log (SteamFriends.GetFriendPersonaName (csid));
-			}
-			SendBytesReliable (new byte[] { (byte)7 });
-			*/
 		}
 	}
 	void NewConnection(ulong csid){
@@ -345,6 +342,7 @@ public class NetworkManager : MonoBehaviour {
 				byte[] timestampBytes = new byte[4];
 				Array.Copy (buffer, 0, timestampBytes, 0, 4);
 				float timestamp = ByteToFloatArray (timestampBytes) [0];
+                Debug.Log(timestamp);
 				byte[] dataIn = new byte[size - 5];
 				Array.Copy (buffer, 5, dataIn, 0, size - 5);
 				switch (dataType) {
