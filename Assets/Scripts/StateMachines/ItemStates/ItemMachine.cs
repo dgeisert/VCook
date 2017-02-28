@@ -43,8 +43,7 @@ public class ItemMachine : VRTK_InteractableObject {
     public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
     {
         base.OnInteractableObjectUngrabbed(e);
-        float[] f = new float[] { transform.position.x, transform.position.y, transform.position.z, transform.rotation.w, transform.rotation.x, transform.rotation.y, transform.rotation.z, rb.velocity.x, rb.velocity.y, rb.velocity.z, rb.angularVelocity.x, rb.angularVelocity.y, rb.angularVelocity.z};
-        NetworkManager.instance.SendStringFloat(itemID, f, InterpretationType.ReleaseObject);
+        NetworkManager.instance.SendReleaseObject(this);
     }
 
     void OnCollisionEnter (Collision col){

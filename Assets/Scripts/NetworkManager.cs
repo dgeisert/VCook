@@ -115,8 +115,8 @@ public class NetworkManager : MonoBehaviour {
 		return byteArray;
 	}
 	float[] ByteToFloatArray(byte[] byteArray) {
-		float len = byteArray.Length / 4;
-		float[] floatArray = new float[Mathf.FloorToInt(len)];
+		int len = byteArray.Length / 4;
+		float[] floatArray = new float[len];
 		for (int i = 0; i < byteArray.Length; i+=4) {
 			floatArray[i/4] = System.BitConverter.ToSingle(byteArray, i);
 		}
@@ -164,6 +164,15 @@ public class NetworkManager : MonoBehaviour {
 		}
 		return FloatToByteArray (f);
 	}
+
+    public void SendReleaseObject(ItemMachine im)
+    {
+        byte[] rbBytes = NetworkManager.instance.RigidbodyBytes(new List<Rigidbody> { im.rb });
+        byte[] stringBytes = StringToByte(im.itemID);
+        byte[] bytes = new byte[rbBytes.Length + stringBytes.Length + 1];
+        bytes[0] = (byte)((int)InterpretationType.ReleaseObject);
+        SendBytesReliable(bytes);
+    }
 
 	public void SendBytes(byte[] bytes){
 		byte[] toSend = new byte[bytes.Length + 4];
@@ -328,6 +337,124 @@ public class NetworkManager : MonoBehaviour {
         go.GetComponent<OtherPlayerObject>().Init();
     }
 
+    byte[] DeconstructPacket(byte[] dataIn, float timestamp, int dataType, CSteamID remoteId)
+    {
+        byte[] returnBytes = new byte[0];
+        switch (dataType)
+        {
+            case 0://ping
+                Debug.Log("ping");
+                if (!ExpectingClient.Contains(remoteId.m_SteamID))
+                {
+                    ExpectingClient.Add(remoteId.m_SteamID);
+                }
+                break;
+            case 1://voice
+                if (otherPlayers.ContainsKey(remoteId.m_SteamID))
+                {
+                    if (otherPlayers[remoteId.m_SteamID] == null)
+                    {
+                        CreateOtherPlayer(remoteId);
+                    }
+                }
+                else
+                {
+                    CreateOtherPlayer(remoteId);
+                }
+                byte[] bufferOut = new byte[22050];
+                uint bytesOut;
+                EVoiceResult voiceOut = SteamUser.DecompressVoice(dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
+                float[] test = new float[11025];
+                for (int i = 0; i < test.Length; ++i)
+                {
+                    test[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
+                }
+                otherPlayers[remoteId.m_SteamID].chatAudio.clip.SetData(test, 0);
+                otherPlayers[remoteId.m_SteamID].chatAudio.Play();
+                break;
+            case 2://person update, head and hands
+                if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
+                {
+                    if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
+                    {
+                        return new byte[0];
+                    }
+                }
+                else
+                {
+                    timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
+                }
+                if (otherPlayers.ContainsKey(remoteId.m_SteamID))
+                {
+                    if (otherPlayers[remoteId.m_SteamID] == null)
+                    {
+                        CreateOtherPlayer(remoteId);
+                    }
+                }
+                else
+                {
+                    CreateOtherPlayer(remoteId);
+                }
+                otherPlayers[remoteId.m_SteamID].InterpretLocation(ByteToFloatArray(dataIn));
+                break;
+            case 3://instantiate object
+                byte[] instantiateChar = new byte[10 * sizeof(char)];
+                byte[] instantiateFloat = new byte[dataIn.Length - instantiateChar.Length];
+                Array.Copy(dataIn, 0, instantiateChar, 0, instantiateChar.Length);
+                Array.Copy(dataIn, instantiateChar.Length, instantiateFloat, 0, instantiateFloat.Length);
+                float[] f = ByteToFloatArray(instantiateFloat);
+                Vector3 pos = new Vector3(f[0], f[1], f[2]);
+                Quaternion quat = new Quaternion(f[3], f[4], f[5], f[6]);
+                //PlayerMachine.instance.CreateItem(gamitem, pos, quat, false, null, ByteToString (instantiateChar));
+                Debug.Log("Instantiate: " + ByteToString(dataIn));
+                break;
+            case 4://other player grabs object
+                Debug.Log("Grab");
+                byte[] grabBytes = new byte[dataIn.Length - 1];
+                Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
+                otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
+                break;
+            case 5://other player releases object
+                Debug.Log("Release");
+                byte[] releaseBytesID = new byte[sizeof(char) * 10];
+                byte[] releaseFloatBytes = new byte[dataIn.Length - releaseBytesID.Length - 1];
+                Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
+                Array.Copy(dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
+                float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
+                Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
+                Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
+                Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
+                Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
+                otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], (int)dataIn[0], relPos, relRot, relVel, relAngVel);
+                break;
+            case 6://destroy object
+                Debug.Log("Destroy");
+                string itemID = ByteToString(dataIn);
+                Destroy(allObjects[itemID].gameObject);
+                allObjects.Remove(itemID);
+                break;
+            case 7://update objects
+                if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
+                {
+                    if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
+                    {
+                        return new byte[0];
+                    }
+                }
+                else
+                {
+                    timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
+                }
+                Debug.Log("Update Objects");
+
+                break;
+            default:
+                Debug.Log("Unknown Data");
+                break;
+        }
+        return returnBytes;
+    }
+
 	Dictionary<string, float> timestamps = new Dictionary<string, float>();
 	public void ReadPackets(){
 		uint size;
@@ -338,105 +465,16 @@ public class NetworkManager : MonoBehaviour {
 			CSteamID remoteId;
 			if (SteamNetworking.ReadP2PPacket(buffer, size, out bytesRead, out remoteId))
 			{
-				int dataType = (int)buffer [4];
 				byte[] timestampBytes = new byte[4];
 				Array.Copy (buffer, 0, timestampBytes, 0, 4);
 				float timestamp = ByteToFloatArray (timestampBytes) [0];
-				byte[] dataIn = new byte[size - 5];
-				Array.Copy (buffer, 5, dataIn, 0, size - 5);
-				switch (dataType) {
-				case 0://ping
-					Debug.Log("ping");
-					if (!ExpectingClient.Contains (remoteId.m_SteamID)) {
-						ExpectingClient.Add (remoteId.m_SteamID);
-					}
-					break;
-				case 1://voice
-					if (otherPlayers.ContainsKey (remoteId.m_SteamID)) {
-						if (otherPlayers [remoteId.m_SteamID] == null) {
-                            CreateOtherPlayer(remoteId);
-						}
-					} else {
-                        CreateOtherPlayer(remoteId);
-                    }
-					byte[] bufferOut = new byte[22050];
-					uint bytesOut;
-					EVoiceResult voiceOut = SteamUser.DecompressVoice (dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
-					float[] test = new float[11025];
-					for (int i = 0; i < test.Length; ++i) {
-						test[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
-					}
-                    otherPlayers[remoteId.m_SteamID].chatAudio.clip.SetData (test, 0);
-                    otherPlayers[remoteId.m_SteamID].chatAudio.Play ();
-					break;
-				case 2://person update, head and hands
-					if (timestamps.ContainsKey (remoteId.m_SteamID.ToString () + dataType.ToString ())) {
-						if (timestamps [remoteId.m_SteamID.ToString () + dataType.ToString ()] > timestamp) {
-							return;
-						}
-					} else {
-						timestamps.Add(remoteId.m_SteamID.ToString () + dataType.ToString (), timestamp);
-					}
-					if (otherPlayers.ContainsKey (remoteId.m_SteamID)) {
-						if (otherPlayers [remoteId.m_SteamID] == null) {
-                            CreateOtherPlayer(remoteId);
-						}
-					} else {
-                        CreateOtherPlayer(remoteId);
-                    }
-					otherPlayers [remoteId.m_SteamID].InterpretLocation (ByteToFloatArray (dataIn));
-					break;
-				case 3://instantiate object
-					byte[] instantiateChar = new byte[10 * sizeof(char)];
-					byte[] instantiateFloat = new byte[dataIn.Length - instantiateChar.Length];
-					Array.Copy (dataIn, 0, instantiateChar, 0, instantiateChar.Length);
-					Array.Copy (dataIn, instantiateChar.Length, instantiateFloat, 0, instantiateFloat.Length);
-					float[] f = ByteToFloatArray (instantiateFloat);
-					Vector3 pos = new Vector3 (f[0], f[1], f[2]);
-					Quaternion quat = new Quaternion(f[3], f[4], f[5], f[6]);
-					//PlayerMachine.instance.CreateItem(gamitem, pos, quat, false, null, ByteToString (instantiateChar));
-					Debug.Log("Instantiate: " + ByteToString(dataIn));
-					break;
-				case 4://other player grabs object
-					Debug.Log("Grab");
-					byte[] grabBytes = new byte[dataIn.Length - 1];
-					Array.Copy (dataIn, 1, grabBytes, 0, grabBytes.Length);
-					otherPlayers [remoteId.m_SteamID].GrabObject (allObjects [ByteToString (grabBytes)], (int)dataIn [0]);
-					break;
-				case 5://other player releases object
-					Debug.Log ("Release");
-					byte[] releaseBytesID = new byte[sizeof(char) * 10];
-					byte[] releaseFloatBytes = new byte[dataIn.Length - releaseBytesID.Length - 1];
-					Array.Copy (dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
-					Array.Copy (dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
-					float[] releaseFloats = ByteToFloatArray (releaseFloatBytes);
-					Vector3 relPos = new Vector3 (releaseFloats [0], releaseFloats [1], releaseFloats [2]);
-					Quaternion relRot = new Quaternion (releaseFloats [3], releaseFloats [4], releaseFloats [5], releaseFloats [6]);
-					Vector3 relVel = new Vector3 (releaseFloats [7], releaseFloats [8], releaseFloats [9]);
-					Vector3 relAngVel = new Vector3 (releaseFloats [10], releaseFloats [11], releaseFloats [12]);
-					otherPlayers [remoteId.m_SteamID].ReleaseObject (allObjects [ByteToString (releaseBytesID)], (int)dataIn [0], relPos, relRot, relVel, relAngVel);
-					break;
-				case 6://destroy object
-					Debug.Log ("Destroy");
-					string itemID = ByteToString (dataIn);
-					Destroy (allObjects [itemID].gameObject);
-					allObjects.Remove (itemID);
-					break;
-				case 7://update objects
-					if (timestamps.ContainsKey (remoteId.m_SteamID.ToString () + dataType.ToString ())) {
-						if (timestamps [remoteId.m_SteamID.ToString () + dataType.ToString ()] > timestamp) {
-							return;
-						}
-					} else {
-						timestamps.Add(remoteId.m_SteamID.ToString () + dataType.ToString (), timestamp);
-					}
-					Debug.Log("Update Objects");
-
-					break;
-				default:
-					Debug.Log ("Unknown Data");
-					break;
-				}
+				byte[] dataIn = new byte[size - 4];
+				Array.Copy (buffer, 4, dataIn, 0, size - 4);
+                while(dataIn.Length > 0)
+                {
+                    int dataType = (int)buffer[4];
+                    DeconstructPacket(dataIn, timestamp, dataType, remoteId);
+                }
 			}
 		}
 	}
