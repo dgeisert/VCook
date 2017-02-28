@@ -470,10 +470,11 @@ public class NetworkManager : MonoBehaviour {
 				float timestamp = ByteToFloatArray (timestampBytes) [0];
 				byte[] dataIn = new byte[size - 4];
 				Array.Copy (buffer, 4, dataIn, 0, size - 4);
-                while(dataIn.Length > 0)
+                while(dataIn.Length > 2)
                 {
                     int dataType = (int)buffer[4];
                     DeconstructPacket(dataIn, timestamp, dataType, remoteId);
+                    dataIn = new byte[0];
                 }
 			}
 		}
