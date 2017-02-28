@@ -395,6 +395,7 @@ public class NetworkManager : MonoBehaviour {
                 {
                     CreateOtherPlayer(remoteId);
                 }
+                Debug.Log(dataIn.Length);
                 otherPlayers[remoteId.m_SteamID].InterpretLocation(ByteToFloatArray(dataIn));
                 break;
             case 3://instantiate object
@@ -472,8 +473,10 @@ public class NetworkManager : MonoBehaviour {
 				Array.Copy (buffer, 4, dataIn, 0, size - 4);
                 while(dataIn.Length > 2)
                 {
-                    int dataType = (int)buffer[4];
-                    DeconstructPacket(dataIn, timestamp, dataType, remoteId);
+                    int dataType = (int)dataIn[0];
+                    byte[] dataIn2 = new byte[dataIn.Length - 1];
+                    Array.Copy(dataIn, 1, dataIn2, 0, dataIn2.Length);
+                    DeconstructPacket(dataIn2, timestamp, dataType, remoteId);
                     dataIn = new byte[0];
                 }
 			}
