@@ -38,7 +38,7 @@ public class ItemMachine : VRTK_InteractableObject {
     public override void OnInteractableObjectGrabbed(InteractableObjectEventArgs e)
     {
         base.OnInteractableObjectGrabbed(e);
-        NetworkManager.instance.SendString(itemID, InterpretationType.GrabObject);
+        NetworkManager.instance.SendGrabObject(this);
     }
     public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
     {

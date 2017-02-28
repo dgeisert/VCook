@@ -33,6 +33,8 @@ public class NetworkManager : MonoBehaviour {
 	public CSteamID host;
 	public Dictionary<ulong, OtherPlayerObject> otherPlayers = new Dictionary<ulong, OtherPlayerObject>();
 	public GameObject otherPlayerObject;
+	float lazyUpdateTimer;
+	Dictionary<string, float> timestamps = new Dictionary<string, float>();
 
 	void Awake(){
 		allObjects = new Dictionary<string, ItemMachine>();
@@ -54,7 +56,6 @@ public class NetworkManager : MonoBehaviour {
 		lazyUpdateTimer = Time.time;
 	}
 
-	float lazyUpdateTimer;
 	public void Update(){
 		if (SteamManager.Initialized) {
 			SteamAPI.RunCallbacks ();
@@ -74,6 +75,98 @@ public class NetworkManager : MonoBehaviour {
 		}
 	}
 
+	public void CheckLobby(){
+		if (SteamManager.Initialized) {
+			List<ulong> inLobby = new List<ulong> ();
+			int lobbyCount = SteamMatchmaking.GetNumLobbyMembers (lobbyID);
+			for (int i = 0; i < lobbyCount; i++) {
+				CSteamID csid = SteamFriends.GetFriendFromSourceByIndex (lobbyID, i);
+				inLobby.Add (csid.m_SteamID);
+				if (!ExpectingClient.Contains (csid.m_SteamID) && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
+					NewConnection (csid.m_SteamID);
+				}
+			}
+			List<ulong> endConnections = new List<ulong> ();
+			for (int j = 0; j < ExpectingClient.Count; j++) {
+				if (!inLobby.Contains (ExpectingClient [j])) {
+					endConnections.Add (ExpectingClient [j]);
+				}
+			}
+			foreach (ulong csid in endConnections) {
+				EndConnection (csid);
+			}
+		}
+	}
+
+	public void ReadPackets(){
+		uint size;
+		while (SteamNetworking.IsP2PPacketAvailable(out size))
+		{
+			var buffer = new byte[size];
+			uint bytesRead;
+			CSteamID remoteId;
+			if (SteamNetworking.ReadP2PPacket(buffer, size, out bytesRead, out remoteId))
+			{
+				byte[] timestampBytes = new byte[4];
+				Array.Copy (buffer, 0, timestampBytes, 0, 4);
+				float timestamp = ByteToFloatArray (timestampBytes) [0];
+				byte[] dataIn = new byte[size - 4];
+				Array.Copy (buffer, 4, dataIn, 0, size - 4);
+				while(dataIn.Length > 2)
+				{
+					int dataType = (int)dataIn[0];
+					byte[] dataIn2 = new byte[dataIn.Length - 1];
+					Array.Copy(dataIn, 1, dataIn2, 0, dataIn2.Length);
+					DeconstructPacket(dataIn2, timestamp, dataType, remoteId);
+					dataIn = new byte[0];
+				}
+			}
+		}
+	}
+
+	byte[] DeconstructPacket(byte[] dataIn, float timestamp, int dataType, CSteamID remoteId)
+	{
+		byte[] returnBytes = new byte[0];
+		switch (dataType)
+		{
+		case 0://ping
+			GetPing(timestamp, dataIn, remoteId);
+			break;
+		case 1://voice
+			Listen(timestamp, dataIn, remoteId);
+			break;
+		case 2://person update, head and hands
+			ParseUpdatePerson(timestamp, dataIn, remoteId);
+			break;
+		case 3://instantiate object
+			ParseInstantiateObject(timestamp, dataIn, remoteId);
+			break;
+		case 4://other player grabs object
+			ParseGrabObject(timestamp, dataIn, remoteId);
+			break;
+		case 5://other player releases object
+			ParseReleaseObject(timestamp, dataIn, remoteId);
+			break;
+		case 6://destroy object
+			ParseDestroyObject(timestamp, dataIn, remoteId);
+			break;
+		case 7://update objects
+			ParseUpdateObjects(timestamp, dataIn, remoteId);
+			break;
+		default:
+			Debug.Log("Unknown Data");
+			break;
+		}
+		return returnBytes;
+	}
+	void GetPing(float timestamp, byte[] dataIn, CSteamID remoteId){
+		Debug.Log("ping");
+		if (!ExpectingClient.Contains(remoteId.m_SteamID))
+		{
+			ExpectingClient.Add(remoteId.m_SteamID);
+		}
+	}
+
 	void Talk(){
 		uint voiceBytes;
 		uint voice2Bytes;
@@ -87,6 +180,259 @@ public class NetworkManager : MonoBehaviour {
 			SendBytes (voice2);
 		}
 	}
+	void Listen(float timestamp, byte[] dataIn, CSteamID remoteId){
+		if (otherPlayers.ContainsKey(remoteId.m_SteamID))
+		{
+			if (otherPlayers[remoteId.m_SteamID] == null)
+			{
+				CreateOtherPlayer(remoteId);
+			}
+		}
+		else
+		{
+			CreateOtherPlayer(remoteId);
+		}
+		byte[] bufferOut = new byte[22050];
+		uint bytesOut;
+		EVoiceResult voiceOut = SteamUser.DecompressVoice(dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
+		float[] test = new float[11025];
+		for (int i = 0; i < test.Length; ++i)
+		{
+			test[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
+		}
+		otherPlayers[remoteId.m_SteamID].chatAudio.clip.SetData(test, 0);
+		otherPlayers[remoteId.m_SteamID].chatAudio.Play();
+	}
+
+
+	void SendMyPosition(){
+		byte[] bytes = ItemsPositionBytes(new List<Transform> {
+			PlayerMachine.instance.headset
+			, PlayerMachine.instance.right
+			, PlayerMachine.instance.left
+		});
+		byte[] bytes2 = new byte[bytes.Length + 1];
+		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);
+		bytes2 [0] = (byte)InterpretationType.PlayerObjects;
+
+		SendBytes (bytes2);
+	}
+	void ParseUpdatePerson(float timestamp, byte[] dataIn, CSteamID remoteId){
+		if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
+		{
+			if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
+			{
+				return;
+			}
+		}
+		else
+		{
+			timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
+		}
+		if (otherPlayers.ContainsKey(remoteId.m_SteamID))
+		{
+			if (otherPlayers[remoteId.m_SteamID] == null)
+			{
+				CreateOtherPlayer(remoteId);
+			}
+		}
+		else
+		{
+			CreateOtherPlayer(remoteId);
+		}
+		Debug.Log(dataIn.Length);
+		otherPlayers[remoteId.m_SteamID].InterpretLocation(ByteToFloatArray(dataIn));
+	}
+
+	void CreateOtherPlayer(CSteamID csid)
+	{
+		GameObject go = (GameObject)GameObject.Instantiate(otherPlayerObject);
+		otherPlayers[csid.m_SteamID] = go.GetComponent<OtherPlayerObject>();
+		go.GetComponent<OtherPlayerObject>().Init();
+	}
+
+	public void SendInstantiateObject(ItemMachine im){
+		Transform t = im.transform;
+		float[] f = new float[] {t.position.x, t.position.y, t.position.z, t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z};
+	}
+	void ParseInstantiateObject(float timestamp, byte[] dataIn, CSteamID remoteId){
+		byte[] instantiateChar = new byte[10 * sizeof(char)];
+		byte[] instantiateFloat = new byte[dataIn.Length - instantiateChar.Length];
+		Array.Copy(dataIn, 0, instantiateChar, 0, instantiateChar.Length);
+		Array.Copy(dataIn, instantiateChar.Length, instantiateFloat, 0, instantiateFloat.Length);
+		float[] f = ByteToFloatArray(instantiateFloat);
+		Vector3 pos = new Vector3(f[0], f[1], f[2]);
+		Quaternion quat = new Quaternion(f[3], f[4], f[5], f[6]);
+		//PlayerMachine.instance.CreateItem(gamitem, pos, quat, false, null, ByteToString (instantiateChar));
+		Debug.Log("Instantiate: " + ByteToString(dataIn));
+	}
+
+	public void SendGrabObject(ItemMachine im, int hand = 1){
+		byte[] stringBytes = StringToByte (im.itemID);
+		byte[] bytes = new byte[stringBytes.Length + 2];
+		bytes[0] = (byte)((int)InterpretationType.GrabObject);
+		bytes[1] = (byte)((int)hand);
+		Array.Copy (stringBytes, 0, bytes, 2, stringBytes.Length);
+		SendBytes (bytes);
+	}
+	void ParseGrabObject(float timestamp, byte[] dataIn, CSteamID remoteId){
+		Debug.Log("Grab");
+		byte[] grabBytes = new byte[dataIn.Length - 1];
+		Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
+		otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
+	}
+
+	public void SendReleaseObject(ItemMachine im)
+	{
+		byte[] rbBytes = NetworkManager.instance.RigidbodyBytes(new List<Rigidbody> { im.rb });
+		byte[] stringBytes = StringToByte(im.itemID);
+		byte[] bytes = new byte[rbBytes.Length + stringBytes.Length + 1];
+		bytes[0] = (byte)((int)InterpretationType.ReleaseObject);
+		Array.Copy (stringBytes, 0, bytes, 2, stringBytes.Length);
+		Array.Copy (rbBytes, 0, bytes, 2 + stringBytes.Length, rbBytes.Length);
+		SendBytesReliable(bytes);
+	}
+	void ParseReleaseObject(float timestamp, byte[] dataIn, CSteamID remoteId){
+		Debug.Log("Release");
+		byte[] releaseBytesID = new byte[sizeof(char) * 10];
+		byte[] releaseFloatBytes = new byte[dataIn.Length - releaseBytesID.Length - 1];
+		Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
+		Array.Copy(dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
+		float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
+		Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
+		Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
+		Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
+		Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
+		otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], (int)dataIn[0], relPos, relRot, relVel, relAngVel);
+	}
+
+	void ParseDestroyObject(float timestamp, byte[] dataIn, CSteamID remoteId){
+		Debug.Log("Destroy");
+		string itemID = ByteToString(dataIn);
+		Destroy(allObjects[itemID].gameObject);
+		allObjects.Remove(itemID);
+	}
+
+	void ParseUpdateObjects(float timestamp, byte[] dataIn, CSteamID remoteId){
+		if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
+		{
+			if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
+			{
+				return;
+			}
+		}
+		else
+		{
+			timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
+		}
+		Debug.Log("Update Objects");
+	}
+
+
+	/*
+	 * This section is sending the bytes, either quickly or reliably
+	 * 
+	 */
+
+	public void SendBytes(byte[] bytes){
+		byte[] toSend = new byte[bytes.Length + 4];
+		Array.Copy (bytes, 0, toSend, 4, bytes.Length);
+		Array.Copy(FloatToByteArray(new float[] {Time.time}) , 0, toSend, 0, 4);
+		foreach (ulong csid in ExpectingClient) {
+			SteamNetworking.SendP2PPacket(new CSteamID(csid), toSend, (uint)toSend.Length, EP2PSend.k_EP2PSendUnreliableNoDelay);
+		}
+	}
+
+	public void SendBytesReliable(byte[] bytes){
+		byte[] toSend = new byte[bytes.Length + 4];
+		Array.Copy (bytes, 0, toSend, 4, bytes.Length);
+		Array.Copy(FloatToByteArray(new float[] {Time.time}) , 0, toSend, 0, 4);
+		foreach (ulong csid in ExpectingClient) {
+			SteamNetworking.SendP2PPacket(new CSteamID(csid), toSend, (uint)toSend.Length, EP2PSend.k_EP2PSendReliable);
+		}
+	}
+
+
+
+	/*
+	 * This section is managing the steam lobby
+	 * 
+	 */
+	public void OnGameOverlayActivated(GameOverlayActivated_t overlay){
+
+	}
+
+	public void OnLobbyCreated(LobbyCreated_t lobbyCreated){
+		host = SteamUser.GetSteamID ();
+		lobbyID = new CSteamID (lobbyCreated.m_ulSteamIDLobby);
+		Debug.Log ("Lobby Created");
+	}
+	public bool IsHost(){
+		return SteamUser.GetSteamID () == host;
+	}
+
+	public void OnLobbyList(LobbyMatchList_t lobbyList){
+		Debug.Log ("Lobby List");
+	}
+
+	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
+		Debug.Log ("Lobby Entered");
+		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
+        SteamUser.StartVoiceRecording();
+        CheckLobby ();
+	}
+
+	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
+		Debug.Log ("Lobby Info");
+	}
+	void NewConnection(ulong csid){
+		ExpectingClient.Add (csid);
+	}
+	void EndConnection(ulong csid){
+		ExpectingClient.Remove (csid);
+		Destroy (otherPlayers [csid].gameObject);
+		otherPlayers.Remove (csid);
+	}
+
+	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
+		Debug.Log ("Requested to join lobby");
+		JoinLobby (joinRequest.m_steamIDLobby);
+	}
+
+	void OnP2PSessionRequest(P2PSessionRequest_t request)
+	{
+		CSteamID clientId = request.m_steamIDRemote;
+		if (ExpectingClient.Contains(clientId.m_SteamID))
+		{
+			SteamNetworking.AcceptP2PSessionWithUser(clientId);
+		} else {
+			Debug.LogWarning("Unexpected session request from " + clientId);
+		}
+	}
+
+	public void SetupServer()
+	{
+		if (SteamManager.Initialized) {
+			CreateLobby (ELobbyType.k_ELobbyTypeFriendsOnly, 2);
+		}
+	}
+
+	SteamAPICall_t CreateLobby (ELobbyType eLobbyType, int maxMembers){
+		return SteamMatchmaking.CreateLobby (eLobbyType, maxMembers);
+	}
+
+	SteamAPICall_t JoinLobby (CSteamID lobby){
+		return SteamMatchmaking.JoinLobby (lobby);
+	}
+
+	bool InviteUserToLobby(CSteamID lobby, CSteamID invitee){
+		return false;
+	}
+
+	/*
+	 * This section is for converting bytes and other primative types
+	 * 
+	 */
 	public void SendStringFloat(string str, float[] floatArray, InterpretationType mType){
 		byte[] bytes = StringToByte (str);
 		byte[] bytes2 = FloatToByteArray (floatArray);
@@ -163,323 +509,5 @@ public class NetworkManager : MonoBehaviour {
 			f [12 + i*13] = rbs[i].angularVelocity.z;
 		}
 		return FloatToByteArray (f);
-	}
-
-    public void SendReleaseObject(ItemMachine im)
-    {
-        byte[] rbBytes = NetworkManager.instance.RigidbodyBytes(new List<Rigidbody> { im.rb });
-        byte[] stringBytes = StringToByte(im.itemID);
-        byte[] bytes = new byte[rbBytes.Length + stringBytes.Length + 1];
-        bytes[0] = (byte)((int)InterpretationType.ReleaseObject);
-        SendBytesReliable(bytes);
-    }
-
-	public void SendBytes(byte[] bytes){
-		byte[] toSend = new byte[bytes.Length + 4];
-		Array.Copy (bytes, 0, toSend, 4, bytes.Length);
-		Array.Copy(FloatToByteArray(new float[] {Time.time}) , 0, toSend, 0, 4);
-		foreach (ulong csid in ExpectingClient) {
-			SteamNetworking.SendP2PPacket(new CSteamID(csid), toSend, (uint)toSend.Length, EP2PSend.k_EP2PSendUnreliableNoDelay);
-		}
-	}
-
-	public void SendBytesReliable(byte[] bytes){
-		byte[] toSend = new byte[bytes.Length + 4];
-		Array.Copy (bytes, 0, toSend, 4, bytes.Length);
-		Array.Copy(FloatToByteArray(new float[] {Time.time}) , 0, toSend, 0, 4);
-		foreach (ulong csid in ExpectingClient) {
-			SteamNetworking.SendP2PPacket(new CSteamID(csid), toSend, (uint)toSend.Length, EP2PSend.k_EP2PSendReliable);
-		}
-	}
-
-	public void OnGameOverlayActivated(GameOverlayActivated_t overlay){
-
-	}
-
-	public void OnLobbyCreated(LobbyCreated_t lobbyCreated){
-		host = SteamUser.GetSteamID ();
-		lobbyID = new CSteamID (lobbyCreated.m_ulSteamIDLobby);
-		Debug.Log ("Lobby Created");
-	}
-	public bool IsHost(){
-		return SteamUser.GetSteamID () == host;
-	}
-
-	public void OnLobbyList(LobbyMatchList_t lobbyList){
-		Debug.Log ("Lobby List");
-	}
-
-	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
-		Debug.Log ("Lobby Entered");
-		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
-        SteamUser.StartVoiceRecording();
-        CheckLobby ();
-	}
-
-	public void OnLobbyInfo(LobbyDataUpdate_t lobbyInfo){
-		Debug.Log ("Lobby Info");
-	}
-
-	public void CheckLobby(){
-		if (SteamManager.Initialized) {
-			List<ulong> inLobby = new List<ulong> ();
-			int lobbyCount = SteamMatchmaking.GetNumLobbyMembers (lobbyID);
-			for (int i = 0; i < lobbyCount; i++) {
-				CSteamID csid = SteamFriends.GetFriendFromSourceByIndex (lobbyID, i);
-				inLobby.Add (csid.m_SteamID);
-				if (!ExpectingClient.Contains (csid.m_SteamID) && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
-					NewConnection (csid.m_SteamID);
-				}
-			}
-			List<ulong> endConnections = new List<ulong> ();
-			for (int j = 0; j < ExpectingClient.Count; j++) {
-				if (!inLobby.Contains (ExpectingClient [j])) {
-					endConnections.Add (ExpectingClient [j]);
-				}
-			}
-			foreach (ulong csid in endConnections) {
-				EndConnection (csid);
-			}
-		}
-	}
-	void NewConnection(ulong csid){
-		ExpectingClient.Add (csid);
-	}
-	void EndConnection(ulong csid){
-		ExpectingClient.Remove (csid);
-		Destroy (otherPlayers [csid].gameObject);
-		otherPlayers.Remove (csid);
-	}
-
-	public void OnJoinRequest(GameLobbyJoinRequested_t joinRequest){
-		Debug.Log ("Requested to join lobby");
-		JoinLobby (joinRequest.m_steamIDLobby);
-	}
-
-	void OnP2PSessionRequest(P2PSessionRequest_t request)
-	{
-		CSteamID clientId = request.m_steamIDRemote;
-		if (ExpectingClient.Contains(clientId.m_SteamID))
-		{
-			SteamNetworking.AcceptP2PSessionWithUser(clientId);
-		} else {
-			Debug.LogWarning("Unexpected session request from " + clientId);
-		}
-	}
-
-	public void SetupServer()
-	{
-		if (SteamManager.Initialized) {
-			CreateLobby (ELobbyType.k_ELobbyTypeFriendsOnly, 2);
-		}
-	}
-
-	SteamAPICall_t CreateLobby (ELobbyType eLobbyType, int maxMembers){
-		return SteamMatchmaking.CreateLobby (eLobbyType, maxMembers);
-	}
-
-	SteamAPICall_t JoinLobby (CSteamID lobby){
-		return SteamMatchmaking.JoinLobby (lobby);
-	}
-
-	bool InviteUserToLobby(CSteamID lobby, CSteamID invitee){
-		return false;
-	}
-
-	void SendMyPosition(){
-		byte[] bytes = ItemsPositionBytes(new List<Transform> {
-			PlayerMachine.instance.headset
-			, PlayerMachine.instance.right
-			, PlayerMachine.instance.left
-		});
-		byte[] bytes2 = new byte[bytes.Length + 1];
-		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);
-		bytes2 [0] = (byte)InterpretationType.PlayerObjects;
-
-		SendBytes (bytes2);
-	}
-	public void SendGrab(string itemID, int hand){
-		byte[] stringBytes = StringToByte (itemID);
-		byte[] bytes = new byte[stringBytes.Length + 2];
-		bytes[0] = (byte)((int)InterpretationType.GrabObject);
-		bytes[1] = (byte)((int)hand);
-		Array.Copy (stringBytes, 0, bytes, 2, stringBytes.Length);
-		SendBytes (bytes);
-	}
-	public void SendRelease(string itemID, int hand, ItemMachine im){
-		byte[] stringBytes = StringToByte (itemID);
-		byte[] floatBytes = FloatToByteArray (new float[] {
-			im.transform.position.x
-			,im.transform.position.y
-			,im.transform.position.z
-			,im.transform.rotation.w
-			,im.transform.rotation.x
-			,im.transform.rotation.y
-			,im.transform.rotation.z
-			,im.rb.velocity.x
-			,im.rb.velocity.y
-			,im.rb.velocity.z
-			,im.rb.angularVelocity.x
-			,im.rb.angularVelocity.y
-			,im.rb.angularVelocity.z});
-		byte[] bytes = new byte[stringBytes.Length + 2 + floatBytes.Length];
-		bytes[0] = (byte)((int)InterpretationType.GrabObject);
-		bytes[1] = (byte)((int)hand);
-		Array.Copy (stringBytes, 0, bytes, 2, stringBytes.Length);
-		Array.Copy (floatBytes, 0, bytes, 2 + stringBytes.Length, floatBytes.Length);
-		SendBytes (bytes);
-	}
-
-    void CreateOtherPlayer(CSteamID csid)
-    {
-        GameObject go = (GameObject)GameObject.Instantiate(otherPlayerObject);
-        otherPlayers[csid.m_SteamID] = go.GetComponent<OtherPlayerObject>();
-        go.GetComponent<OtherPlayerObject>().Init();
-    }
-
-    byte[] DeconstructPacket(byte[] dataIn, float timestamp, int dataType, CSteamID remoteId)
-    {
-        byte[] returnBytes = new byte[0];
-        switch (dataType)
-        {
-            case 0://ping
-                Debug.Log("ping");
-                if (!ExpectingClient.Contains(remoteId.m_SteamID))
-                {
-                    ExpectingClient.Add(remoteId.m_SteamID);
-                }
-                break;
-            case 1://voice
-                if (otherPlayers.ContainsKey(remoteId.m_SteamID))
-                {
-                    if (otherPlayers[remoteId.m_SteamID] == null)
-                    {
-                        CreateOtherPlayer(remoteId);
-                    }
-                }
-                else
-                {
-                    CreateOtherPlayer(remoteId);
-                }
-                byte[] bufferOut = new byte[22050];
-                uint bytesOut;
-                EVoiceResult voiceOut = SteamUser.DecompressVoice(dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
-                float[] test = new float[11025];
-                for (int i = 0; i < test.Length; ++i)
-                {
-                    test[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
-                }
-                otherPlayers[remoteId.m_SteamID].chatAudio.clip.SetData(test, 0);
-                otherPlayers[remoteId.m_SteamID].chatAudio.Play();
-                break;
-            case 2://person update, head and hands
-                if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
-                {
-                    if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
-                    {
-                        return new byte[0];
-                    }
-                }
-                else
-                {
-                    timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
-                }
-                if (otherPlayers.ContainsKey(remoteId.m_SteamID))
-                {
-                    if (otherPlayers[remoteId.m_SteamID] == null)
-                    {
-                        CreateOtherPlayer(remoteId);
-                    }
-                }
-                else
-                {
-                    CreateOtherPlayer(remoteId);
-                }
-                Debug.Log(dataIn.Length);
-                otherPlayers[remoteId.m_SteamID].InterpretLocation(ByteToFloatArray(dataIn));
-                break;
-            case 3://instantiate object
-                byte[] instantiateChar = new byte[10 * sizeof(char)];
-                byte[] instantiateFloat = new byte[dataIn.Length - instantiateChar.Length];
-                Array.Copy(dataIn, 0, instantiateChar, 0, instantiateChar.Length);
-                Array.Copy(dataIn, instantiateChar.Length, instantiateFloat, 0, instantiateFloat.Length);
-                float[] f = ByteToFloatArray(instantiateFloat);
-                Vector3 pos = new Vector3(f[0], f[1], f[2]);
-                Quaternion quat = new Quaternion(f[3], f[4], f[5], f[6]);
-                //PlayerMachine.instance.CreateItem(gamitem, pos, quat, false, null, ByteToString (instantiateChar));
-                Debug.Log("Instantiate: " + ByteToString(dataIn));
-                break;
-            case 4://other player grabs object
-                Debug.Log("Grab");
-                byte[] grabBytes = new byte[dataIn.Length - 1];
-                Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
-                otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
-                break;
-            case 5://other player releases object
-                Debug.Log("Release");
-                byte[] releaseBytesID = new byte[sizeof(char) * 10];
-                byte[] releaseFloatBytes = new byte[dataIn.Length - releaseBytesID.Length - 1];
-                Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
-                Array.Copy(dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
-                float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
-                Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
-                Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
-                Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
-                Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
-                otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], (int)dataIn[0], relPos, relRot, relVel, relAngVel);
-                break;
-            case 6://destroy object
-                Debug.Log("Destroy");
-                string itemID = ByteToString(dataIn);
-                Destroy(allObjects[itemID].gameObject);
-                allObjects.Remove(itemID);
-                break;
-            case 7://update objects
-                if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
-                {
-                    if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
-                    {
-                        return new byte[0];
-                    }
-                }
-                else
-                {
-                    timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
-                }
-                Debug.Log("Update Objects");
-
-                break;
-            default:
-                Debug.Log("Unknown Data");
-                break;
-        }
-        return returnBytes;
-    }
-
-	Dictionary<string, float> timestamps = new Dictionary<string, float>();
-	public void ReadPackets(){
-		uint size;
-		while (SteamNetworking.IsP2PPacketAvailable(out size))
-		{
-			var buffer = new byte[size];
-			uint bytesRead;
-			CSteamID remoteId;
-			if (SteamNetworking.ReadP2PPacket(buffer, size, out bytesRead, out remoteId))
-			{
-				byte[] timestampBytes = new byte[4];
-				Array.Copy (buffer, 0, timestampBytes, 0, 4);
-				float timestamp = ByteToFloatArray (timestampBytes) [0];
-				byte[] dataIn = new byte[size - 4];
-				Array.Copy (buffer, 4, dataIn, 0, size - 4);
-                while(dataIn.Length > 2)
-                {
-                    int dataType = (int)dataIn[0];
-                    byte[] dataIn2 = new byte[dataIn.Length - 1];
-                    Array.Copy(dataIn, 1, dataIn2, 0, dataIn2.Length);
-                    DeconstructPacket(dataIn2, timestamp, dataType, remoteId);
-                    dataIn = new byte[0];
-                }
-			}
-		}
 	}
 }
