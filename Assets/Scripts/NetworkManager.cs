@@ -398,6 +398,7 @@ public class NetworkManager : MonoBehaviour {
             Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4), idBytes, 0, idBytes.Length);
             Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, rbBytes, 0, rbBytes.Length);
             string itemID = ByteToString(idBytes);
+            Debug.Log("Updating: " + itemID);
             if (allObjects.ContainsKey(itemID))
             {
                 float[] f = ByteToFloatArray(rbBytes);
