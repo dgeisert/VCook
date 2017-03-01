@@ -14,13 +14,6 @@ public class ItemMachine : VRTK_InteractableObject {
 	public int updatePriority = 0;
     public int phase = 0;
 
-    public void Start()
-    {
-        if (!NetworkManager.instance.allObjects.ContainsKey(itemID))
-        {
-            Init();
-        }
-    }
 	public void Init(){
 		if (itemID == null || itemID == "") {
 			itemID = "";

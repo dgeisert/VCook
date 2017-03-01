@@ -54,6 +54,10 @@ public class NetworkManager : MonoBehaviour {
 			Callback_p2PSessionRequest = Callback<P2PSessionRequest_t>.Create(OnP2PSessionRequest);
 		}
 		lazyUpdateTimer = Time.time;
+        foreach(ItemMachine im in GameObject.FindObjectsOfType<ItemMachine>())
+        {
+            im.Init();
+        }
 	}
 
 	public void Update(){
