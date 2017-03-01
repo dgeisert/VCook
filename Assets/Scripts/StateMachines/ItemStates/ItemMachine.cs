@@ -57,4 +57,12 @@ public class ItemMachine : VRTK_InteractableObject {
             }
         }
 	}
+
+    public void SetRB(Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angVel)
+    {
+        transform.position = pos;
+        transform.rotation = rot;
+        rb.velocity = vel;
+        rb.angularVelocity = angVel;
+    }
 }

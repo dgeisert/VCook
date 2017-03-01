@@ -5,7 +5,7 @@ using UnityEngine;
 public class TransformationManager : MonoBehaviour {
 
 	[SerializeField] public List<Transformation> Transformations = new List<Transformation>();
-	private Dictionary<string, ItemMachine> itemList;
+	public Dictionary<string, ItemMachine> itemList;
 	private Dictionary<string, Transformation> TransformationChecker;
 	public static TransformationManager instance;
 

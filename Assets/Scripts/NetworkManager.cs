@@ -218,16 +218,16 @@ public class NetworkManager : MonoBehaviour {
 		SendBytes (bytes2);
 	}
 	void ParseUpdatePerson(float timestamp, byte[] dataIn, CSteamID remoteId){
-		if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
+		if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString()))
 		{
-			if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
+			if (timestamps[remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString().ToString()] > timestamp)
 			{
 				return;
 			}
 		}
 		else
 		{
-			timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
+			timestamps.Add(remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString().ToString(), timestamp);
 		}
 		if (otherPlayers.ContainsKey(remoteId.m_SteamID))
 		{
@@ -252,19 +252,37 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	public void SendInstantiateObject(ItemMachine im){
-		Transform t = im.transform;
-		float[] f = new float[] {t.position.x, t.position.y, t.position.z, t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z};
+		byte[] rbBytes = RigidbodyBytes(new List<Rigidbody> { im.rb });
+        byte[] nameBytes = StringToByte(im.itemName);
+        byte[] idBytes = StringToByte(im.itemID);
+        byte[] bytes = new byte[1 + rbBytes.Length + nameBytes.Length + idBytes.Length];
+        bytes[0] = (byte)((int)InterpretationType.CreateObject);
+        Array.Copy(idBytes, 0, bytes, 1, idBytes.Length);
+        Array.Copy(rbBytes, 0, bytes, 1 + idBytes.Length, rbBytes.Length);
+        Array.Copy(nameBytes, 0, bytes, 1 + idBytes.Length + rbBytes.Length, nameBytes.Length);
+        SendBytesReliable(bytes);
 	}
-	void ParseInstantiateObject(float timestamp, byte[] dataIn, CSteamID remoteId){
-		byte[] instantiateChar = new byte[10 * sizeof(char)];
-		byte[] instantiateFloat = new byte[dataIn.Length - instantiateChar.Length];
-		Array.Copy(dataIn, 0, instantiateChar, 0, instantiateChar.Length);
-		Array.Copy(dataIn, instantiateChar.Length, instantiateFloat, 0, instantiateFloat.Length);
-		float[] f = ByteToFloatArray(instantiateFloat);
+	void ParseInstantiateObject(float timestamp, byte[] dataIn, CSteamID remoteId)
+    {//add rb parsing
+        byte[] instantiateChar = new byte[10 * sizeof(char)];
+        byte[] instantiateFloat = new byte[4 * 13];
+        byte[] instantiateName = new byte[dataIn.Length - instantiateFloat.Length - instantiateChar.Length];
+        Array.Copy(dataIn, 0, instantiateChar, 0, instantiateChar.Length);
+        Array.Copy(dataIn, instantiateChar.Length, instantiateFloat, 0, instantiateFloat.Length);
+        Array.Copy(dataIn, instantiateChar.Length + instantiateFloat.Length, instantiateName, 0, instantiateName.Length);
+        float[] f = ByteToFloatArray(instantiateFloat);
 		Vector3 pos = new Vector3(f[0], f[1], f[2]);
 		Quaternion quat = new Quaternion(f[3], f[4], f[5], f[6]);
-		//PlayerMachine.instance.CreateItem(gamitem, pos, quat, false, null, ByteToString (instantiateChar));
-		Debug.Log("Instantiate: " + ByteToString(dataIn));
+        string itemName = ByteToString(instantiateName);
+        if (RecipeManager.instance.itemList.ContainsKey(itemName))
+        {
+            PlayerMachine.instance.CreateItem(RecipeManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar));
+        }
+        else if(TransformationManager.instance.itemList.ContainsKey(itemName))
+        {
+            PlayerMachine.instance.CreateItem(TransformationManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar));
+        }
+		Debug.Log("Instantiate: " + itemName);
 	}
 
 	public void SendGrabObject(ItemMachine im, int hand = 1){
@@ -295,7 +313,7 @@ public class NetworkManager : MonoBehaviour {
 	void ParseReleaseObject(float timestamp, byte[] dataIn, CSteamID remoteId){
 		Debug.Log("Release");
 		byte[] releaseBytesID = new byte[sizeof(char) * 10];
-		byte[] releaseFloatBytes = new byte[dataIn.Length - releaseBytesID.Length - 1];
+		byte[] releaseFloatBytes = new byte[4 * 13];
 		Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
 		Array.Copy(dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
 		float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
@@ -303,28 +321,86 @@ public class NetworkManager : MonoBehaviour {
 		Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
 		Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
 		Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
-		otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], (int)dataIn[0], relPos, relRot, relVel, relAngVel);
+		otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], relPos, relRot, relVel, relAngVel);
 	}
 
+    public void DestroyObject(ItemMachine im)
+    {
+        byte[] stringBytes = StringToByte(im.itemID);
+        byte[] bytes = new byte[stringBytes.Length + 1];
+        Array.Copy(stringBytes, 0, bytes, 1, stringBytes.Length);
+        bytes[0] = (byte)((int)InterpretationType.DestroyObject);
+        SendBytesReliable(bytes);
+    }
 	void ParseDestroyObject(float timestamp, byte[] dataIn, CSteamID remoteId){
 		Debug.Log("Destroy");
 		string itemID = ByteToString(dataIn);
-		Destroy(allObjects[itemID].gameObject);
-		allObjects.Remove(itemID);
+        if (allObjects.ContainsKey(itemID))
+        {
+            Destroy(allObjects[itemID].gameObject);
+            allObjects.Remove(itemID);
+        }
 	}
 
+    public void SendObjectUpdate()
+    {
+        List<byte[]> rbsBytes = new List<byte[]>();
+        List<string> removes = new List<string>();
+        List<byte[]> strBytes = new List<byte[]>();
+        foreach(KeyValuePair<string, ItemMachine> kvp in allObjects)
+        {
+            if(kvp.Value != null)
+            {
+                rbsBytes.Add(RigidbodyBytes(new List<Rigidbody> { kvp.Value.rb }));
+                strBytes.Add(StringToByte(kvp.Value.itemID));
+            }
+            else
+            {
+                removes.Add(kvp.Key);
+            }
+        }
+        foreach(string str in removes)
+        {
+            allObjects.Remove(str);
+        }
+        byte[] bytes = new byte[rbsBytes.Count * (sizeof(char) * 10 + 13 * 4)];
+        for(int i = 0; i < rbsBytes.Count; i++)
+        {
+            Array.Copy(strBytes[i], 0, bytes, i * (sizeof(char) * 10 + 13 * 4), sizeof(char) * 10);
+            Array.Copy(rbsBytes[i], 0, bytes, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, 13 * 4);
+        }
+        SendBytes(bytes);
+    }
 	void ParseUpdateObjects(float timestamp, byte[] dataIn, CSteamID remoteId){
-		if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + dataType.ToString()))
+		if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + ((int)InterpretationType.UpdateObjects).ToString()))
 		{
-			if (timestamps[remoteId.m_SteamID.ToString() + dataType.ToString()] > timestamp)
+			if (timestamps[remoteId.m_SteamID.ToString() + ((int)InterpretationType.UpdateObjects).ToString()] > timestamp)
 			{
 				return;
 			}
 		}
 		else
 		{
-			timestamps.Add(remoteId.m_SteamID.ToString() + dataType.ToString(), timestamp);
+			timestamps.Add(remoteId.m_SteamID.ToString() + ((int)InterpretationType.UpdateObjects).ToString(), timestamp);
 		}
+        for(int i = 0; i < (dataIn.Length / (sizeof(char) * 10 + 13 * 4)); i++)
+        {
+            byte[] idBytes = new byte[sizeof(char) * 10];
+            byte[] rbBytes = new byte[13 * 4];
+            Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4), idBytes, 0, idBytes.Length);
+            Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, rbBytes, 0, rbBytes.Length);
+            string itemID = ByteToString(idBytes);
+            if (allObjects.ContainsKey(itemID))
+            {
+                float[] f = ByteToFloatArray(rbBytes);
+                allObjects[itemID].SetRB(
+                    new Vector3(f[0], f[1], f[2]),
+                    new Quaternion(f[3], f[4], f[5], f[6]),
+                    new Vector3(f[7], f[8], f[9]),
+                    new Vector3(f[10], f[11], f[12])
+                    );
+            }
+        }
 		Debug.Log("Update Objects");
 	}
 

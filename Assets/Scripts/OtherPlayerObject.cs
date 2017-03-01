@@ -43,7 +43,7 @@ public class OtherPlayerObject : MonoBehaviour {
 		im.transform.localRotation = Quaternion.identity;
 	}
 
-	public void ReleaseObject(ItemMachine im, int hand, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel){
+	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel){
 		im.transform.SetParent (null);
 		im.rb.isKinematic = false;
 		im.rb.useGravity = true;

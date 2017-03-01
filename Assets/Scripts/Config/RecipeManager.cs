@@ -5,7 +5,7 @@ using UnityEngine;
 public class RecipeManager : MonoBehaviour {
 
 	[SerializeField] public List<Recipe> Recipes = new List<Recipe>();
-	private Dictionary<string, ItemMachine> itemList;
+	public Dictionary<string, ItemMachine> itemList;
 	private Dictionary<string, Recipe> RecipeChecker;
 	public static RecipeManager instance;
 
