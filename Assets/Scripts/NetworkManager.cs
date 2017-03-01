@@ -409,7 +409,7 @@ public class NetworkManager : MonoBehaviour {
                     );
             }
         }
-		Debug.Log("Update Objects: " + (dataIn.Length / (sizeof(char) * 10 + 13 * 4));
+		Debug.Log("Update Objects: " + (dataIn.Length / (sizeof(char) * 10 + 13 * 4)));
 	}
 
 
