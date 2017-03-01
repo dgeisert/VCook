@@ -582,10 +582,10 @@ public class NetworkManager : MonoBehaviour {
 			f [0 + i*13] = rbs[i].position.x;
 			f [1 + i*13] = rbs[i].position.y;
 			f [2 + i*13] = rbs[i].position.z;
-			f [3 + i*13] = rbs[i].rotation.w;
-			f [4 + i*13] = rbs[i].rotation.x;
-			f [5 + i*13] = rbs[i].rotation.y;
-			f [6 + i*13] = rbs[i].rotation.z;
+			f [3 + i*13] = rbs[i].rotation.x;
+			f [4 + i*13] = rbs[i].rotation.y;
+			f [5 + i*13] = rbs[i].rotation.z;
+			f [6 + i*13] = rbs[i].rotation.w;
 			f [7 + i*13] = rbs[i].velocity.x;
 			f [8 + i*13] = rbs[i].velocity.y;
 			f [9 + i*13] = rbs[i].velocity.z;
