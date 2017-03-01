@@ -68,6 +68,10 @@ public class NetworkManager : MonoBehaviour {
 			ReadPackets ();
 			SendMyPosition ();
 			Talk ();
+            if (IsHost())
+            {
+                SendObjectUpdate();
+            }
 			if (lazyUpdateTimer + 3 < Time.time) {
 				lazyUpdateTimer = Time.time;
 				CheckLobby ();
@@ -240,7 +244,6 @@ public class NetworkManager : MonoBehaviour {
 		{
 			CreateOtherPlayer(remoteId);
 		}
-		Debug.Log(dataIn.Length);
 		otherPlayers[remoteId.m_SteamID].InterpretLocation(ByteToFloatArray(dataIn));
 	}
 
@@ -294,10 +297,9 @@ public class NetworkManager : MonoBehaviour {
 		SendBytes (bytes);
 	}
 	void ParseGrabObject(float timestamp, byte[] dataIn, CSteamID remoteId){
-		Debug.Log("Grab");
-		byte[] grabBytes = new byte[dataIn.Length - 1];
-		Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
-		otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
+		byte[] grabBytes = new byte[dataIn.Length];
+        Debug.Log("Grab: " + ByteToString(grabBytes));
+        otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
 	}
 
 	public void SendReleaseObject(ItemMachine im)
@@ -311,12 +313,12 @@ public class NetworkManager : MonoBehaviour {
 		SendBytesReliable(bytes);
 	}
 	void ParseReleaseObject(float timestamp, byte[] dataIn, CSteamID remoteId){
-		Debug.Log("Release");
 		byte[] releaseBytesID = new byte[sizeof(char) * 10];
 		byte[] releaseFloatBytes = new byte[4 * 13];
 		Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
 		Array.Copy(dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
-		float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
+        Debug.Log("Release: " + releaseBytesID);
+        float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
 		Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
 		Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
 		Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
@@ -333,8 +335,8 @@ public class NetworkManager : MonoBehaviour {
         SendBytesReliable(bytes);
     }
 	void ParseDestroyObject(float timestamp, byte[] dataIn, CSteamID remoteId){
-		Debug.Log("Destroy");
 		string itemID = ByteToString(dataIn);
+        Debug.Log("Destroy: " + itemID);
         if (allObjects.ContainsKey(itemID))
         {
             Destroy(allObjects[itemID].gameObject);
@@ -363,12 +365,13 @@ public class NetworkManager : MonoBehaviour {
         {
             allObjects.Remove(str);
         }
-        byte[] bytes = new byte[rbsBytes.Count * (sizeof(char) * 10 + 13 * 4)];
+        byte[] bytes = new byte[rbsBytes.Count * (sizeof(char) * 10 + 13 * 4) + 1];
         for(int i = 0; i < rbsBytes.Count; i++)
         {
             Array.Copy(strBytes[i], 0, bytes, i * (sizeof(char) * 10 + 13 * 4), sizeof(char) * 10);
             Array.Copy(rbsBytes[i], 0, bytes, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, 13 * 4);
         }
+        bytes[0] = (byte)((int)InterpretationType.UpdateObjects);
         SendBytes(bytes);
     }
 	void ParseUpdateObjects(float timestamp, byte[] dataIn, CSteamID remoteId){
