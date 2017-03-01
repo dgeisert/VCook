@@ -313,7 +313,7 @@ public class NetworkManager : MonoBehaviour {
 		byte[] stringBytes = StringToByte(im.itemID);
 		byte[] bytes = new byte[rbBytes.Length + stringBytes.Length + 1];
 		bytes[0] = (byte)((int)InterpretationType.ReleaseObject);
-		Array.Copy (stringBytes, 0, bytes, 2, stringBytes.Length);
+		Array.Copy (stringBytes, 0, bytes, 1, stringBytes.Length);
 		Array.Copy (rbBytes, 0, bytes, 1 + stringBytes.Length, rbBytes.Length);
 		SendBytesReliable(bytes);
 	}
