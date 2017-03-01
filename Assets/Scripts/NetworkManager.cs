@@ -300,6 +300,9 @@ public class NetworkManager : MonoBehaviour {
 		byte[] grabBytes = new byte[dataIn.Length - 1];
         Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
         Debug.Log("Grab: " + ByteToString(grabBytes));
+        Debug.Log("All Objects Count : " + allObjects.Count);
+        Debug.Log(allObjects[ByteToString(grabBytes)].itemID);
+        Debug.Log(otherPlayers[remoteId.m_SteamID]);
         otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
 	}
 
