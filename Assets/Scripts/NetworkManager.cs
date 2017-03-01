@@ -297,8 +297,9 @@ public class NetworkManager : MonoBehaviour {
 		SendBytes (bytes);
 	}
 	void ParseGrabObject(float timestamp, byte[] dataIn, CSteamID remoteId){
-		byte[] grabBytes = new byte[dataIn.Length];
-        Debug.Log("Grab: " + ByteToString(grabBytes));
+		byte[] grabBytes = new byte[dataIn.Length - 1];
+        Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
+        Debug.Log("Grab: " + ByteToString(dataIn));
         otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
 	}
 
@@ -317,7 +318,7 @@ public class NetworkManager : MonoBehaviour {
 		byte[] releaseFloatBytes = new byte[4 * 13];
 		Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
 		Array.Copy(dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
-        Debug.Log("Release: " + releaseBytesID);
+        Debug.Log("Release: " + ByteToString(releaseBytesID));
         float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
 		Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
 		Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
