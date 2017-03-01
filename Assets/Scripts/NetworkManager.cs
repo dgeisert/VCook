@@ -373,8 +373,8 @@ public class NetworkManager : MonoBehaviour {
         byte[] bytes = new byte[rbsBytes.Count * (sizeof(char) * 10 + 13 * 4) + 1];
         for(int i = 0; i < rbsBytes.Count; i++)
         {
-            Array.Copy(strBytes[i], 0, bytes, i * (sizeof(char) * 10 + 13 * 4), sizeof(char) * 10);
-            Array.Copy(rbsBytes[i], 0, bytes, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, 13 * 4);
+            Array.Copy(strBytes[i], 0, bytes, 1 + i * (sizeof(char) * 10 + 13 * 4), sizeof(char) * 10);
+            Array.Copy(rbsBytes[i], 0, bytes, 1 + i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, 13 * 4);
         }
         bytes[0] = (byte)((int)InterpretationType.UpdateObjects);
         SendBytes(bytes);
