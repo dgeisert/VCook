@@ -304,9 +304,6 @@ public class NetworkManager : MonoBehaviour {
 		byte[] grabBytes = new byte[dataIn.Length - 1];
         Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
         Debug.Log("Grab: " + ByteToString(grabBytes));
-        Debug.Log("All Objects Count : " + allObjects.Count);
-        Debug.Log(allObjects[ByteToString(grabBytes)].itemID);
-        Debug.Log(otherPlayers[remoteId.m_SteamID]);
         otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
 	}
 
@@ -324,7 +321,7 @@ public class NetworkManager : MonoBehaviour {
 		byte[] releaseBytesID = new byte[sizeof(char) * 10];
 		byte[] releaseFloatBytes = new byte[4 * 13];
 		Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
-		Array.Copy(dataIn, 1 + releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
+		Array.Copy(dataIn, releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
         Debug.Log("Release: " + ByteToString(releaseBytesID));
         float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
 		Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
