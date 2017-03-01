@@ -320,7 +320,7 @@ public class NetworkManager : MonoBehaviour {
 	void ParseReleaseObject(float timestamp, byte[] dataIn, CSteamID remoteId){
 		byte[] releaseBytesID = new byte[sizeof(char) * 10];
 		byte[] releaseFloatBytes = new byte[4 * 13];
-		Array.Copy(dataIn, 1, releaseBytesID, 0, releaseBytesID.Length);
+		Array.Copy(dataIn, 0, releaseBytesID, 0, releaseBytesID.Length);
 		Array.Copy(dataIn, releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
         Debug.Log("Release: " + ByteToString(releaseBytesID));
         float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
