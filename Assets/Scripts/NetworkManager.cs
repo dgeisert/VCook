@@ -299,7 +299,7 @@ public class NetworkManager : MonoBehaviour {
 	void ParseGrabObject(float timestamp, byte[] dataIn, CSteamID remoteId){
 		byte[] grabBytes = new byte[dataIn.Length - 1];
         Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
-        Debug.Log("Grab: " + ByteToString(dataIn));
+        Debug.Log("Grab: " + ByteToString(grabBytes));
         otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
 	}
 
