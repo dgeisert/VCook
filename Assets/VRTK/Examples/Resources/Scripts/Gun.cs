@@ -20,16 +20,6 @@
             bullet.SetActive(false);
         }
 
-        public override void OnInteractableObjectGrabbed(InteractableObjectEventArgs e)
-        {
-            base.OnInteractableObjectGrabbed(e);
-            Debug.Log(name);
-        }
-        public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
-        {
-            base.OnInteractableObjectUngrabbed(e);
-            Debug.Log(name);
-        }
         private void FireBullet()
         {
             GameObject bulletClone = Instantiate(bullet, bullet.transform.position, bullet.transform.rotation) as GameObject;

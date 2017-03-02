@@ -90,7 +90,7 @@ public class NetworkManager : MonoBehaviour {
 			for (int i = 0; i < lobbyCount; i++) {
 				CSteamID csid = SteamFriends.GetFriendFromSourceByIndex (lobbyID, i);
 				inLobby.Add (csid.m_SteamID);
-				if (!ExpectingClient.Contains (csid.m_SteamID) && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
+				if (!ExpectingClient.Contains (csid.m_SteamID)){// && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
 					NewConnection (csid.m_SteamID);
 				}
 			}
@@ -207,7 +207,7 @@ public class NetworkManager : MonoBehaviour {
         byte[] bufferOut = new byte[22050];
 		uint bytesOut;
 		EVoiceResult voiceOut = SteamUser.DecompressVoice(dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
-		float[] audio = new float[11025];
+		float[] audio = new float[Mathf.FloorToInt(bytesOut/2)];
 		for (int i = 0; i < audio.Length; ++i)
 		{
 			audio[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;

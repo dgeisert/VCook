@@ -12,24 +12,26 @@ public class OtherPlayerObject : MonoBehaviour {
 
     public void Init(float timestamp)
     {
-        clip = AudioClip.Create("chat", 22050, 1, 11025, false, false);
+        clip = AudioClip.Create("chat", 11025, 1, 11025, false, false);
         chatAudio.clip = clip;
         createTime = timestamp;
         lastAudio = Time.time;
+		chatAudio.PlayDelayed (0.2f);
     }
 
     public void Update()
     {
-        if(lastAudio + 0.9f < Time.time)
+        if(lastAudio + 0.4f < Time.time)
         {
-            clip.SetData(new float[22050], 0);
+            clip.SetData(new float[11025], 0);
+			lastAudio = Time.time;
         }
     }
 
     public void PlayAudio(float[] audio, float timestamp)
     {
-        clip.SetData(audio, Mathf.FloorToInt( 11025 * ((timestamp - createTime) % 1f + 0.1f)));
-        
+		clip.SetData (audio, Mathf.FloorToInt (11025 * ((timestamp - createTime)  - Mathf.Floor(timestamp - createTime))));
+		lastAudio = Time.time;
     }
 
 	public void InterpretLocation(float[] f){
