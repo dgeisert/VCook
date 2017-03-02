@@ -193,23 +193,26 @@ public class NetworkManager : MonoBehaviour {
 		{
 			if (otherPlayers[remoteId.m_SteamID] == null)
 			{
-				CreateOtherPlayer(remoteId);
-			}
+                CreateOtherPlayer(remoteId, timestamp);
+            }
 		}
 		else
 		{
-			CreateOtherPlayer(remoteId);
-		}
-		byte[] bufferOut = new byte[22050];
+            CreateOtherPlayer(remoteId, timestamp);
+        }
+        if (!timestamps.ContainsKey(remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString()))
+        {
+            timestamps.Add(remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString(), timestamp);
+        }
+        byte[] bufferOut = new byte[22050];
 		uint bytesOut;
 		EVoiceResult voiceOut = SteamUser.DecompressVoice(dataIn, (uint)dataIn.Length, bufferOut, 22050, out bytesOut, 11025);
-		float[] test = new float[11025];
-		for (int i = 0; i < test.Length; ++i)
+		float[] audio = new float[11025];
+		for (int i = 0; i < audio.Length; ++i)
 		{
-			test[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
+			audio[i] = (short)(bufferOut[i * 2] | bufferOut[i * 2 + 1] << 8) / 32768.0f;
 		}
-		otherPlayers[remoteId.m_SteamID].chatAudio.clip.SetData(test, 0);
-		otherPlayers[remoteId.m_SteamID].chatAudio.Play();
+        otherPlayers[remoteId.m_SteamID].PlayAudio(audio, timestamp);
 	}
 
 
@@ -228,34 +231,34 @@ public class NetworkManager : MonoBehaviour {
 	void ParseUpdatePerson(float timestamp, byte[] dataIn, CSteamID remoteId){
 		if (timestamps.ContainsKey(remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString()))
 		{
-			if (timestamps[remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString().ToString()] > timestamp)
+			if (timestamps[remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString()] > timestamp)
 			{
 				return;
 			}
 		}
 		else
 		{
-			timestamps.Add(remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString().ToString(), timestamp);
+			timestamps.Add(remoteId.m_SteamID.ToString() + ((int)InterpretationType.PlayerObjects).ToString(), timestamp);
 		}
 		if (otherPlayers.ContainsKey(remoteId.m_SteamID))
 		{
 			if (otherPlayers[remoteId.m_SteamID] == null)
 			{
-				CreateOtherPlayer(remoteId);
-			}
+                CreateOtherPlayer(remoteId, timestamp);
+            }
 		}
 		else
 		{
-			CreateOtherPlayer(remoteId);
+			CreateOtherPlayer(remoteId, timestamp);
 		}
 		otherPlayers[remoteId.m_SteamID].InterpretLocation(ByteToFloatArray(dataIn));
 	}
 
-	void CreateOtherPlayer(CSteamID csid)
+	void CreateOtherPlayer(CSteamID csid, float timestamp)
 	{
 		GameObject go = (GameObject)GameObject.Instantiate(otherPlayerObject);
 		otherPlayers[csid.m_SteamID] = go.GetComponent<OtherPlayerObject>();
-		go.GetComponent<OtherPlayerObject>().Init();
+		go.GetComponent<OtherPlayerObject>().Init(timestamp);
 	}
 
 	public void SendInstantiateObject(ItemMachine im){
@@ -398,7 +401,6 @@ public class NetworkManager : MonoBehaviour {
             Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4), idBytes, 0, idBytes.Length);
             Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, rbBytes, 0, rbBytes.Length);
             string itemID = ByteToString(idBytes);
-            Debug.Log("Updating: " + itemID);
             if (allObjects.ContainsKey(itemID))
             {
                 float[] f = ByteToFloatArray(rbBytes);
@@ -410,7 +412,6 @@ public class NetworkManager : MonoBehaviour {
                     );
             }
         }
-		Debug.Log("Update Objects: " + (dataIn.Length / (sizeof(char) * 10 + 13 * 4)));
 	}
 
 

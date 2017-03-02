@@ -6,10 +6,30 @@ public class OtherPlayerObject : MonoBehaviour {
 
 	public Transform head, left, right;
     public AudioSource chatAudio;
+    public AudioClip clip;
+    public float createTime;
+    public float lastAudio;
 
-    public void Init()
+    public void Init(float timestamp)
     {
-        chatAudio.clip = AudioClip.Create("chat", 11025, 1, 11025, false, false);
+        clip = AudioClip.Create("chat", 22050, 1, 11025, false, false);
+        chatAudio.clip = clip;
+        createTime = timestamp;
+        lastAudio = Time.time;
+    }
+
+    public void Update()
+    {
+        if(lastAudio + 0.9f < Time.time)
+        {
+            clip.SetData(new float[22050], 0);
+        }
+    }
+
+    public void PlayAudio(float[] audio, float timestamp)
+    {
+        clip.SetData(audio, Mathf.FloorToInt( 11025 * ((timestamp - createTime) % 1f + 0.1f)));
+        
     }
 
 	public void InterpretLocation(float[] f){
