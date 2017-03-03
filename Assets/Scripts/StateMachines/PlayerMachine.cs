@@ -77,8 +77,8 @@ public class PlayerMachine : MonoBehaviour {
 		ES2.Save(resources, "resources");
 	}
 
-	public ItemMachine CreateItem(GameObject baseItem, Vector3 position, Quaternion rotation, bool isLocal = false, Transform parent = null, string SetID = ""){
-		if (NetworkManager.instance.IsHost ()) {
+	public ItemMachine CreateItem(GameObject baseItem, Vector3 position, Quaternion rotation, bool isLocal = false, Transform parent = null, string SetID = "", bool fromHost = false){
+		if (NetworkManager.instance.IsHost () || fromHost) {
 			GameObject go = (GameObject)GameObject.Instantiate (baseItem);
 			ItemMachine im = go.GetComponent<ItemMachine> ();
 			if (SetID != "") {
@@ -118,4 +118,9 @@ public class PlayerMachine : MonoBehaviour {
 		}
 		return null;
 	}
+
+    public void DestroyItem(ItemMachine im)
+    {
+        NetworkManager.instance.DestroyObject(im);
+    }
 }

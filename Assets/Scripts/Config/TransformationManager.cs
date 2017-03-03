@@ -37,8 +37,8 @@ public class TransformationManager : MonoBehaviour {
 				item.phase++;
 				if (item.phase >= item.phases) {
                     PlayerMachine.instance.CreateItem(TransformationChecker[item.itemName + heldItem.transformationType.ToString()].outItem.gameObject, item.transform.position, item.transform.rotation, false, item.transform.parent);
-                    Destroy (item.gameObject);
-					return true;
+                    PlayerMachine.instance.DestroyItem(item);
+                    return true;
 				}
 				return true;
 			}
@@ -56,8 +56,8 @@ public class TransformationManager : MonoBehaviour {
 				if (item.phase >= item.phases)
                 {
                     PlayerMachine.instance.CreateItem(TransformationChecker[item.itemName + surface.transformationType.ToString()].outItem.gameObject, item.transform.position, item.transform.rotation, false, item.transform.parent);
-                    Destroy (item.gameObject);
-					return true;
+                    PlayerMachine.instance.DestroyItem(item);
+                    return true;
 				}
 				return true;
 			}

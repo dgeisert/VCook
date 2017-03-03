@@ -26,12 +26,19 @@ public class OtherPlayerObject : MonoBehaviour {
             clip.SetData(new float[11025], 0);
 			lastAudio = Time.time;
         }
-        clip.SetData(new float[1000], chatAudio.timeSamples - 1001);
+        if (chatAudio.timeSamples > 1001)
+        {
+            clip.SetData(new float[1000], chatAudio.timeSamples - 1001);
+        }else
+        {
+            clip.SetData(new float[chatAudio.timeSamples - 1], 0);
+            clip.SetData(new float[500], clip.samples - 501);
+        }
     }
 
     public void PlayAudio(float[] audio, float timestamp)
     {
-		clip.SetData (audio, Mathf.FloorToInt (11025 * ((timestamp - createTime)  - Mathf.Floor(timestamp - createTime))));
+		clip.SetData (audio, Mathf.Max(0, Mathf.Min(11024, Mathf.FloorToInt (11025 * ((timestamp - createTime)  - Mathf.Floor(timestamp - createTime))))));
 		lastAudio = Time.time;
     }
 

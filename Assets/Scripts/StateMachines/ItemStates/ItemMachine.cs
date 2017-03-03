@@ -57,7 +57,11 @@ public class ItemMachine : VRTK_InteractableObject {
         base.OnInteractableObjectGrabbed(e);
 		transform.SetParent (e.interactingObject.transform);
 		updatePriority = 0;
-		int hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject> ().index;
+        int hand = 1;
+        if (e.interactingObject != null)
+        {
+            hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
+        }
         NetworkManager.instance.SendGrabObject(this, hand);
     }
     public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
@@ -85,6 +89,10 @@ public class ItemMachine : VRTK_InteractableObject {
 
     public void SetRB(Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angVel)
     {
+        if (transform.GetComponentInParent<SteamVR_TrackedObject>() != null || transform.GetComponentInParent<OtherPlayerObject>() != null)
+        {
+            return;
+        }
         transform.position = pos;
         transform.rotation = rot;
         rb.velocity = vel;

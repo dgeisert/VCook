@@ -48,7 +48,7 @@ public class RecipeManager : MonoBehaviour {
 		if (r.outD != null) {
             PlayerMachine.instance.CreateItem(r.outD.gameObject, surfaceItem.transform.position, surfaceItem.transform.rotation, false, surfaceItem.transform.parent);
 		}
-		Destroy (heldItem.gameObject);
-		Destroy (surfaceItem.gameObject);
+		PlayerMachine.instance.DestroyItem (heldItem);
+        PlayerMachine.instance.DestroyItem (surfaceItem);
 	}
 }

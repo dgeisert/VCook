@@ -286,11 +286,11 @@ public class NetworkManager : MonoBehaviour {
         string itemName = ByteToString(instantiateName);
         if (RecipeManager.instance.itemList.ContainsKey(itemName))
         {
-            PlayerMachine.instance.CreateItem(RecipeManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar));
+            PlayerMachine.instance.CreateItem(RecipeManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar), true);
         }
         else if(TransformationManager.instance.itemList.ContainsKey(itemName))
         {
-            PlayerMachine.instance.CreateItem(TransformationManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar));
+            PlayerMachine.instance.CreateItem(TransformationManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar), true);
         }
 		Debug.Log("Instantiate: " + itemName);
 	}
@@ -341,6 +341,11 @@ public class NetworkManager : MonoBehaviour {
         Array.Copy(stringBytes, 0, bytes, 1, stringBytes.Length);
         bytes[0] = (byte)((int)InterpretationType.DestroyObject);
         SendBytesReliable(bytes);
+        if (allObjects.ContainsKey(im.itemID))
+        {
+            allObjects.Remove(im.itemID);
+        }
+        Destroy(im.gameObject);
     }
 	void ParseDestroyObject(float timestamp, byte[] dataIn, CSteamID remoteId){
 		string itemID = ByteToString(dataIn);
@@ -406,12 +411,15 @@ public class NetworkManager : MonoBehaviour {
             if (allObjects.ContainsKey(itemID))
             {
                 float[] f = ByteToFloatArray(rbBytes);
-                allObjects[itemID].SetRB(
-                    new Vector3(f[0], f[1], f[2]),
-                    new Quaternion(f[3], f[4], f[5], f[6]),
-                    new Vector3(f[7], f[8], f[9]),
-                    new Vector3(f[10], f[11], f[12])
-                    );
+                if (allObjects[itemID] != null)
+                {
+                    allObjects[itemID].SetRB(
+                        new Vector3(f[0], f[1], f[2]),
+                        new Quaternion(f[3], f[4], f[5], f[6]),
+                        new Vector3(f[7], f[8], f[9]),
+                        new Vector3(f[10], f[11], f[12])
+                        );
+                }
             }
         }
 	}
@@ -517,6 +525,7 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	SteamAPICall_t JoinLobby (CSteamID lobby){
+        lobbyID = lobby;
 		return SteamMatchmaking.JoinLobby (lobby);
 	}
 
