@@ -463,7 +463,7 @@ public class NetworkManager : MonoBehaviour {
 		}
 	}
 	public bool IsInLobby(){
-		return lobbyID != null;
+		return lobbyID == null;
 	}
 
 	public void OnLobbyList(LobbyMatchList_t lobbyList){
@@ -576,13 +576,26 @@ public class NetworkManager : MonoBehaviour {
 	public byte[] ItemsPositionBytes(List<Transform> trs){
 		float[] f = new float[7*trs.Count];
 		for (int i = 0; i < trs.Count; i++) {
-			f [0 + i*7] = trs[i].position.x;
-			f [1 + i*7] = trs[i].position.y;
-			f [2 + i*7] = trs[i].position.z;
-			f [3 + i*7] = trs[i].rotation.w;
-			f [4 + i*7] = trs[i].rotation.x;
-			f [5 + i*7] = trs[i].rotation.y;
-			f [6 + i*7] = trs[i].rotation.z;
+            if (trs[i] != null)
+            {
+                f[0 + i * 7] = trs[i].position.x;
+                f[1 + i * 7] = trs[i].position.y;
+                f[2 + i * 7] = trs[i].position.z;
+                f[3 + i * 7] = trs[i].rotation.w;
+                f[4 + i * 7] = trs[i].rotation.x;
+                f[5 + i * 7] = trs[i].rotation.y;
+                f[6 + i * 7] = trs[i].rotation.z;
+            }
+            else
+            {
+                f[0 + i * 7] = 0;
+                f[1 + i * 7] = 0;
+                f[2 + i * 7] = 0;
+                f[3 + i * 7] = 0;
+                f[4 + i * 7] = 0;
+                f[5 + i * 7] = 0;
+                f[6 + i * 7] = 0;
+            }
 		}
 		return FloatToByteArray (f);
 	}

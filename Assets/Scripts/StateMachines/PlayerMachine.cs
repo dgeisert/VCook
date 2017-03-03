@@ -9,6 +9,7 @@ public class PlayerMachine : MonoBehaviour {
 	public Transform headset, left, right;
 	private Dictionary<string, int> resources;
 	private Dictionary<string, GameObject> loadedResources;
+    public bool rememberLocation = false;
 	public GameObject timerObject;
 
 	public void Start(){
@@ -18,7 +19,6 @@ public class PlayerMachine : MonoBehaviour {
 	public void Init(){
 		PlayerMachine.playerObject = gameObject;
 		PlayerMachine.instance = this;
-		DontDestroyOnLoad (gameObject);
 		if (ES2.Exists ("resources")) {
 			resources = ES2.LoadDictionary<string, int> ("resources");
 		} else {
@@ -31,17 +31,16 @@ public class PlayerMachine : MonoBehaviour {
 				loadedResources.Add (obj.name, (GameObject)obj);
 			}
 		}
-		/*
-		if (ES2.Exists ("playerLocation")) {
+		if (ES2.Exists ("playerLocation") && rememberLocation) {
 			Transform tr = ES2.Load<Transform> ("playerLocation");
 			transform.position = tr.position;
 			transform.localScale = tr.localScale;
 			transform.localRotation = tr.localRotation;
 			Destroy (tr.gameObject);
-		} else {
+		} else if (AreaStartStateMachine.instance != null){
 			transform.position = AreaStartStateMachine.instance.transform.position;
 			transform.rotation = AreaStartStateMachine.instance.transform.rotation;
-		}*/
+		}
 	}
 
 	public int GetResource(string resource){
@@ -91,15 +90,22 @@ public class PlayerMachine : MonoBehaviour {
 			}
 			Transform t = im.transform;
 			t.SetParent (parent);
-			OtherPlayerObject opo = parent.GetComponentInParent<OtherPlayerObject> ();
-			if (opo != null) {
-				im.Grabbed (parent.gameObject);
-			} else {
-				VRTK.VRTK_TrackedController vrtkTC = parent.GetComponentInParent<VRTK.VRTK_TrackedController> ();
-				if (vrtkTC != null) {
-					im.Grabbed (vrtkTC.gameObject);
-				}
-			}
+            if (parent != null)
+            {
+                OtherPlayerObject opo = parent.GetComponentInParent<OtherPlayerObject>();
+                if (opo != null)
+                {
+                    im.Grabbed(parent.gameObject);
+                }
+                else
+                {
+                    VRTK.VRTK_TrackedController vrtkTC = parent.GetComponentInParent<VRTK.VRTK_TrackedController>();
+                    if (vrtkTC != null)
+                    {
+                        im.Grabbed(vrtkTC.gameObject);
+                    }
+                }
+            }
 			if (isLocal) {
 				t.localPosition = position;
 				t.localRotation = rotation;
