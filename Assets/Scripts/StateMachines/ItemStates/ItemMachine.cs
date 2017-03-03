@@ -25,15 +25,17 @@ public class ItemMachine : VRTK_InteractableObject {
 	}
 
 	public void Update(){
-		if (transform.parent != null) {
-			if (GetComponentInParent<OtherPlayerObject>() != null) {
-				updatePriority = 0;
-				return;
+		if (NetworkManager.instance.IsInLobby ()) {
+			if (transform.parent != null) {
+				if (GetComponentInParent<OtherPlayerObject> () != null) {
+					updatePriority = 0;
+					return;
+				}
 			}
+			updatePriority += Mathf.CeilToInt (rb.velocity.magnitude * 100);
+			updatePriority += Mathf.CeilToInt (rb.angularVelocity.magnitude * 100);
+			updatePriority++;
 		}
-		updatePriority += Mathf.CeilToInt (rb.velocity.magnitude * 100);
-		updatePriority += Mathf.CeilToInt (rb.angularVelocity.magnitude * 100);
-		updatePriority++;
 	}
 	public bool ShouldUpdate(){
 		if (updatePriority > 1000) {
