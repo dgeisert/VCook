@@ -23,6 +23,26 @@ public class ItemMachine : VRTK_InteractableObject {
 		}
 		NetworkManager.instance.allObjects.Add (itemID, this);
 	}
+
+	public void Update(){
+		if (transform.parent != null) {
+			if (GetComponentInParent<OtherPlayerObject>() != null) {
+				updatePriority = 0;
+				return;
+			}
+		}
+		updatePriority += Mathf.CeilToInt (rb.velocity.magnitude * 100);
+		updatePriority += Mathf.CeilToInt (rb.angularVelocity.magnitude * 100);
+		updatePriority++;
+	}
+	public bool ShouldUpdate(){
+		if (updatePriority > 1000) {
+			return true;
+			updatePriority = 0;
+		} else {
+			return false;
+		}
+	}
 	public void SetID(string SetID){
 		itemID = SetID;
 		NetworkManager.instance.allObjects.Add (itemID, this);
@@ -31,15 +51,21 @@ public class ItemMachine : VRTK_InteractableObject {
     public override void OnInteractableObjectGrabbed(InteractableObjectEventArgs e)
     {
         base.OnInteractableObjectGrabbed(e);
+		transform.SetParent (e.interactingObject.transform);
+		updatePriority = 0;
+		int hand = (int)e.interactingObject.GetComponent<SteamVR_TrackedObject> ().index;
         NetworkManager.instance.SendGrabObject(this);
     }
     public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
     {
-        base.OnInteractableObjectUngrabbed(e);
+		base.OnInteractableObjectUngrabbed(e);
+		transform.SetParent (null);
+		updatePriority = 1001;
         NetworkManager.instance.SendReleaseObject(this);
     }
 
-    void OnCollisionEnter (Collision col){
+	void OnCollisionEnter (Collision col){
+		updatePriority = 1001;
 		ItemMachine im = col.collider.GetComponentInParent<ItemMachine> ();
 		if (im != null)
         {

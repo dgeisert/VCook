@@ -78,28 +78,28 @@ public class PlayerMachine : MonoBehaviour {
 	}
 
 	public ItemMachine CreateItem(GameObject baseItem, Vector3 position, Quaternion rotation, bool isLocal = false, Transform parent = null, string SetID = ""){
-		GameObject go = (GameObject) GameObject.Instantiate (baseItem);
-		ItemMachine im = go.GetComponent<ItemMachine> ();
-		if (SetID != "") {
-			if (!NetworkManager.instance.allObjects.ContainsKey (SetID)) {
-				im.SetID (SetID);
+		if (NetworkManager.instance.IsHost ()) {
+			GameObject go = (GameObject)GameObject.Instantiate (baseItem);
+			ItemMachine im = go.GetComponent<ItemMachine> ();
+			if (SetID != "") {
+				if (!NetworkManager.instance.allObjects.ContainsKey (SetID)) {
+					im.SetID (SetID);
+				}
+			} else {
+				im.Init ();
 			}
-		} else {
-			im.Init ();
+			Transform t = im.transform;
+			t.SetParent (parent);
+			if (isLocal) {
+				t.localPosition = position;
+				t.localRotation = rotation;
+			} else {
+				t.position = position;
+				t.rotation = rotation;
+			}
+			NetworkManager.instance.SendInstantiateObject (im);
+			return im;
 		}
-		Transform t = im.transform;
-        t.SetParent(parent);
-        if (isLocal)
-        {
-            t.localPosition = position;
-            t.localRotation = rotation;
-        }
-        else
-        {
-            t.position = position;
-            t.rotation = rotation;
-        }
-		NetworkManager.instance.SendInstantiateObject (im);
-		return im;
+		return null;
 	}
 }

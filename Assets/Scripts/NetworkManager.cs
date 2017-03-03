@@ -361,8 +361,10 @@ public class NetworkManager : MonoBehaviour {
         {
             if(kvp.Value != null)
             {
-                rbsBytes.Add(RigidbodyBytes(new List<Rigidbody> { kvp.Value.rb }));
-                strBytes.Add(StringToByte(kvp.Value.itemID));
+				if (kvp.Value.ShouldUpdate()) {
+					rbsBytes.Add (RigidbodyBytes (new List<Rigidbody> { kvp.Value.rb }));
+					strBytes.Add (StringToByte (kvp.Value.itemID));
+				}
             }
             else
             {
@@ -454,7 +456,14 @@ public class NetworkManager : MonoBehaviour {
 		Debug.Log ("Lobby Created");
 	}
 	public bool IsHost(){
-		return SteamUser.GetSteamID () == host;
+		if (IsInLobby()) {
+			return SteamUser.GetSteamID () == host;
+		} else {
+			return true;
+		}
+	}
+	public bool IsInLobby(){
+		return lobbyID != null;
 	}
 
 	public void OnLobbyList(LobbyMatchList_t lobbyList){
