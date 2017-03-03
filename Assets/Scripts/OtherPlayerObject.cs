@@ -26,6 +26,7 @@ public class OtherPlayerObject : MonoBehaviour {
             clip.SetData(new float[11025], 0);
 			lastAudio = Time.time;
         }
+        clip.SetData(new float[1000], chatAudio.timeSamples - 1001);
     }
 
     public void PlayAudio(float[] audio, float timestamp)
