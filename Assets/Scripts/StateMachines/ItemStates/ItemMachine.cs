@@ -60,12 +60,12 @@ public class ItemMachine : VRTK_InteractableObject {
         int hand = 1;
         if (e.interactingObject != null)
         {
-            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null)
+            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null)
             {
                 hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
+                NetworkManager.instance.SendGrabObject(this, hand);
             }
         }
-        NetworkManager.instance.SendGrabObject(this, hand);
     }
     public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
 	{
@@ -74,7 +74,13 @@ public class ItemMachine : VRTK_InteractableObject {
 		base.OnInteractableObjectUngrabbed(e);
 		transform.SetParent (null);
 		updatePriority = 1001;
-        NetworkManager.instance.SendReleaseObject(this);
+        if (e.interactingObject != null)
+        {
+            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null)
+            {
+                NetworkManager.instance.SendReleaseObject(this);
+            }
+        }
     }
 
 	void OnCollisionEnter (Collision col){
