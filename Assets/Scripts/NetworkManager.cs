@@ -90,7 +90,7 @@ public class NetworkManager : MonoBehaviour {
 			for (int i = 0; i < lobbyCount; i++) {
 				CSteamID csid = SteamFriends.GetFriendFromSourceByIndex (lobbyID, i);
 				inLobby.Add (csid.m_SteamID);
-				if (!ExpectingClient.Contains (csid.m_SteamID)){// && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
+				if (!ExpectingClient.Contains (csid.m_SteamID) && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
 					NewConnection (csid.m_SteamID);
 				}
 			}
