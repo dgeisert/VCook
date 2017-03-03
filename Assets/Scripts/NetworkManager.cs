@@ -31,6 +31,7 @@ public class NetworkManager : MonoBehaviour {
 	public Dictionary<string, ItemMachine> allObjects;
 	public static NetworkManager instance;
 	public CSteamID host;
+    public bool isHost = true;
 	public Dictionary<ulong, OtherPlayerObject> otherPlayers = new Dictionary<ulong, OtherPlayerObject>();
 	public GameObject otherPlayerObject;
 	float lazyUpdateTimer;
@@ -72,6 +73,7 @@ public class NetworkManager : MonoBehaviour {
 			ReadPackets ();
 			SendMyPosition ();
 			Talk ();
+            Debug.Log(IsHost());
             if (IsHost())
             {
                 SendObjectUpdate();
@@ -460,18 +462,15 @@ public class NetworkManager : MonoBehaviour {
 
 	public void OnLobbyCreated(LobbyCreated_t lobbyCreated){
 		host = SteamUser.GetSteamID ();
+        isHost = true;
 		lobbyID = new CSteamID (lobbyCreated.m_ulSteamIDLobby);
 		Debug.Log ("Lobby Created");
 	}
 	public bool IsHost(){
-		if (IsInLobby()) {
-			return SteamUser.GetSteamID () == host;
-		} else {
-			return true;
-		}
+        return isHost;
 	}
 	public bool IsInLobby(){
-		return lobbyID == null;
+		return lobbyID.IsLobby();
 	}
 
 	public void OnLobbyList(LobbyMatchList_t lobbyList){
@@ -481,6 +480,7 @@ public class NetworkManager : MonoBehaviour {
 	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
 		Debug.Log ("Lobby Entered");
 		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
+        isHost = false;
         SteamUser.StartVoiceRecording();
         CheckLobby ();
 	}
@@ -525,7 +525,6 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	SteamAPICall_t JoinLobby (CSteamID lobby){
-        lobbyID = lobby;
 		return SteamMatchmaking.JoinLobby (lobby);
 	}
 

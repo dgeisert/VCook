@@ -31,7 +31,6 @@ public class OtherPlayerObject : MonoBehaviour {
             clip.SetData(new float[1000], chatAudio.timeSamples - 1001);
         }else
         {
-            clip.SetData(new float[chatAudio.timeSamples - 1], 0);
             clip.SetData(new float[500], clip.samples - 501);
         }
     }

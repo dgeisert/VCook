@@ -60,7 +60,10 @@ public class ItemMachine : VRTK_InteractableObject {
         int hand = 1;
         if (e.interactingObject != null)
         {
-            hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
+            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null)
+            {
+                hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
+            }
         }
         NetworkManager.instance.SendGrabObject(this, hand);
     }
