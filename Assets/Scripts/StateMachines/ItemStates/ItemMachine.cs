@@ -51,7 +51,9 @@ public class ItemMachine : VRTK_InteractableObject {
     }
 
     public override void OnInteractableObjectGrabbed(InteractableObjectEventArgs e)
-    {
+	{
+		rb.isKinematic = true;
+		rb.useGravity = false;
         base.OnInteractableObjectGrabbed(e);
 		transform.SetParent (e.interactingObject.transform);
 		updatePriority = 0;
@@ -59,7 +61,9 @@ public class ItemMachine : VRTK_InteractableObject {
         NetworkManager.instance.SendGrabObject(this);
     }
     public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
-    {
+	{
+		rb.isKinematic = false;
+		rb.useGravity = true;
 		base.OnInteractableObjectUngrabbed(e);
 		transform.SetParent (null);
 		updatePriority = 1001;

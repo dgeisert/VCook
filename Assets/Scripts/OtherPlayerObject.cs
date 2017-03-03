@@ -46,29 +46,27 @@ public class OtherPlayerObject : MonoBehaviour {
 	}
 
 	public void GrabObject(ItemMachine im, int hand){
+		Transform handTransform = head;
 		switch (hand) {
 		case 0:
-			im.transform.SetParent (head);
+			handTransform = head;
 			break;
 		case 2:
-			im.transform.SetParent (left);
+			handTransform = left;
 			break;
 		case 1:
-			im.transform.SetParent (right);
+			handTransform = right;
 			break;
 		default:
 			break;
 		}
-		im.rb.isKinematic = true;
-		im.rb.useGravity = false;
-		im.transform.localPosition = Vector3.zero;
-		im.transform.localRotation = Quaternion.identity;
+		im.Grabbed (handTransform.gameObject);
 	}
 
 	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel){
-		im.transform.SetParent (null);
-		im.rb.isKinematic = false;
-		im.rb.useGravity = true;
+		if (im.transform.parent != null) {
+			im.Ungrabbed (im.transform.parent.gameObject);
+		}
 		im.transform.position = pos;
 		im.transform.rotation = rot;
 		im.rb.velocity = vel;

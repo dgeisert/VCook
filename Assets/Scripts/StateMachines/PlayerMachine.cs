@@ -31,6 +31,7 @@ public class PlayerMachine : MonoBehaviour {
 				loadedResources.Add (obj.name, (GameObject)obj);
 			}
 		}
+		/*
 		if (ES2.Exists ("playerLocation")) {
 			Transform tr = ES2.Load<Transform> ("playerLocation");
 			transform.position = tr.position;
@@ -40,7 +41,7 @@ public class PlayerMachine : MonoBehaviour {
 		} else {
 			transform.position = AreaStartStateMachine.instance.transform.position;
 			transform.rotation = AreaStartStateMachine.instance.transform.rotation;
-		}
+		}*/
 	}
 
 	public int GetResource(string resource){
@@ -90,6 +91,15 @@ public class PlayerMachine : MonoBehaviour {
 			}
 			Transform t = im.transform;
 			t.SetParent (parent);
+			OtherPlayerObject opo = parent.GetComponentInParent<OtherPlayerObject> ();
+			if (opo != null) {
+				im.Grabbed (parent.gameObject);
+			} else {
+				VRTK.VRTK_TrackedController vrtkTC = parent.GetComponentInParent<VRTK.VRTK_TrackedController> ();
+				if (vrtkTC != null) {
+					im.Grabbed (vrtkTC.gameObject);
+				}
+			}
 			if (isLocal) {
 				t.localPosition = position;
 				t.localRotation = rotation;
