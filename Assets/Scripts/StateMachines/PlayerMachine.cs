@@ -78,7 +78,7 @@ public class PlayerMachine : MonoBehaviour {
 	}
 
 	public ItemMachine CreateItem(GameObject baseItem, Vector3 position, Quaternion rotation, bool isLocal = false, Transform parent = null, string SetID = "", bool fromHost = false){
-		if (NetworkManager.instance.IsHost () || fromHost) {
+		if ((NetworkManager.instance.IsInLobby() && NetworkManager.instance.IsHost ()) || fromHost) {
 			GameObject go = (GameObject)GameObject.Instantiate (baseItem);
 			ItemMachine im = go.GetComponent<ItemMachine> ();
 			if (SetID != "") {

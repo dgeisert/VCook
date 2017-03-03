@@ -31,7 +31,7 @@ public class NetworkManager : MonoBehaviour {
 	public Dictionary<string, ItemMachine> allObjects;
 	public static NetworkManager instance;
 	public CSteamID host;
-    public bool isHost = true;
+    public bool isHost = false;
 	public Dictionary<ulong, OtherPlayerObject> otherPlayers = new Dictionary<ulong, OtherPlayerObject>();
 	public GameObject otherPlayerObject;
 	float lazyUpdateTimer;
@@ -73,7 +73,6 @@ public class NetworkManager : MonoBehaviour {
 			ReadPackets ();
 			SendMyPosition ();
 			Talk ();
-            Debug.Log(IsHost());
             if (IsHost())
             {
                 SendObjectUpdate();
@@ -480,7 +479,6 @@ public class NetworkManager : MonoBehaviour {
 	public void OnLobbyEnter(LobbyEnter_t lobbyEnter){
 		Debug.Log ("Lobby Entered");
 		lobbyID = new CSteamID (lobbyEnter.m_ulSteamIDLobby);
-        isHost = false;
         SteamUser.StartVoiceRecording();
         CheckLobby ();
 	}
