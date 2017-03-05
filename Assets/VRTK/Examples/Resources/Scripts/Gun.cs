@@ -2,7 +2,7 @@
 {
     using UnityEngine;
 
-    public class Gun : VRTK_InteractableObject
+    public class Gun : ItemMachine
     {
         private GameObject bullet;
         private float bulletSpeed = 1000f;
@@ -22,11 +22,11 @@
 
         private void FireBullet()
         {
-            GameObject bulletClone = Instantiate(bullet, bullet.transform.position, bullet.transform.rotation) as GameObject;
-            bulletClone.SetActive(true);
-            Rigidbody rb = bulletClone.GetComponent<Rigidbody>();
+            ItemMachine im = PlayerMachine.instance.CreateItem(bullet, bullet.transform.position, bullet.transform.rotation, false, null,"", true);
+            im.gameObject.SetActive(true);
+            Rigidbody rb = im.GetComponent<Rigidbody>();
             rb.AddForce(-bullet.transform.forward * bulletSpeed);
-            Destroy(bulletClone, bulletLife);
+            Destroy(im.gameObject, bulletLife);
         }
     }
 }
