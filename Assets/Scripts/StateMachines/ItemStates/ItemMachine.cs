@@ -108,4 +108,9 @@ public class ItemMachine : VRTK_InteractableObject {
         rb.velocity = vel;
         rb.angularVelocity = angVel;
     }
+
+    public void OnDestroy()
+    {
+        NetworkManager.instance.DestroyObject(this);
+    }
 }

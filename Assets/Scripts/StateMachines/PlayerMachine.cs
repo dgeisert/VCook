@@ -118,9 +118,4 @@ public class PlayerMachine : MonoBehaviour {
 		}
 		return null;
 	}
-
-    public void DestroyItem(ItemMachine im)
-    {
-        NetworkManager.instance.DestroyObject(im);
-    }
 }
