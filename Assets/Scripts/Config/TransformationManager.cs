@@ -64,5 +64,4 @@ public class TransformationManager : MonoBehaviour {
 		}
 		return false;
 	}
-
 }
