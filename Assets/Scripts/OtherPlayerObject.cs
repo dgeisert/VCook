@@ -54,14 +54,15 @@ public class OtherPlayerObject : MonoBehaviour {
 
 	public void GrabObject(ItemMachine im, int hand){
 		Transform handTransform = head;
+        im.sendRelease = true;
 		switch (hand) {
-		case 0:
+		case 2:
 			handTransform = head;
 			break;
-		case 2:
+		case 1:
 			handTransform = left;
 			break;
-		case 1:
+		case 0:
 			handTransform = right;
 			break;
 		default:
@@ -70,7 +71,8 @@ public class OtherPlayerObject : MonoBehaviour {
 		im.Grabbed (handTransform.gameObject);
 	}
 
-	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel){
+	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel, bool isMine = false){
+        im.sendRelease = isMine;
 		if (im.transform.parent != null) {
 			im.Ungrabbed (im.transform.parent.gameObject);
 		}

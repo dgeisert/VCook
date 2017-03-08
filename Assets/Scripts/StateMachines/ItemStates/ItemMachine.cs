@@ -13,6 +13,7 @@ public class ItemMachine : VRTK_InteractableObject {
 	static string glyphs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 	public int updatePriority = 0;
     public int phase = 0;
+    public bool sendRelease = true;
 
 	public void Init(){
 		if (itemID == null || itemID == "") {
@@ -38,9 +39,10 @@ public class ItemMachine : VRTK_InteractableObject {
 		}
 	}
 	public bool ShouldUpdate(){
-		if (updatePriority > 1000) {
-			return true;
-			updatePriority = 0;
+		if (updatePriority > 1000)
+        {
+            updatePriority = 0;
+            return true;
 		} else {
 			return false;
 		}
@@ -57,12 +59,12 @@ public class ItemMachine : VRTK_InteractableObject {
         base.OnInteractableObjectGrabbed(e);
 		transform.SetParent (e.interactingObject.transform);
 		updatePriority = 0;
-        int hand = 1;
+        sendRelease = true;
         if (e.interactingObject != null)
         {
             if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null)
             {
-                hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
+                int hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
                 NetworkManager.instance.SendGrabObject(this, hand);
             }
         }
@@ -71,7 +73,7 @@ public class ItemMachine : VRTK_InteractableObject {
     {
         if (e.interactingObject != null)
         {
-            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null && !NetworkManager.instance.IsHost())
+            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null && sendRelease)
             {
                 NetworkManager.instance.SendReleaseObject(this);
             }
