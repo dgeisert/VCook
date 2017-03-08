@@ -60,8 +60,11 @@ public class ItemMachine : VRTK_InteractableObject {
 		transform.SetParent (e.interactingObject.transform);
 		updatePriority = 0;
         sendRelease = true;
+        Debug.Log("has interacting object: " + (e.interactingObject != null));
         if (e.interactingObject != null)
         {
+            Debug.Log("has controller: " + (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null));
+            Debug.Log("not other player: " + (e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null));
             if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null)
             {
                 int hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;

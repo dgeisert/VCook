@@ -298,6 +298,7 @@ public class NetworkManager : MonoBehaviour {
 
 	public void SendGrabObject(ItemMachine im, int hand = 1){
 		byte[] stringBytes = StringToByte (im.itemID);
+        Debug.Log("Sending Grab " + im.itemID);
 		byte[] bytes = new byte[stringBytes.Length + 2];
 		bytes[0] = (byte)((int)InterpretationType.GrabObject);
 		bytes[1] = (byte)((int)hand);

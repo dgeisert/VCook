@@ -1,0 +1,245 @@
+fileFormatVersion: 2
+guid: d7f105bb82492ee44ad0d9c76c431d8a
+timeCreated: 1472816511
+licenseType: Store
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: brustchetta
+    100002: canned beverage
+    100004: caprese salad
+    100006: curry
+    100008: fish and chips
+    100010: //RootNode
+    100012: grater
+    100014: kebab
+    100016: kettle
+    100018: labster
+    100020: lemon set
+    100022: lemon set 1
+    100024: lemon set 2
+    100026: lemon set 3
+    100028: lemon set 4
+    100030: lemon set 5
+    100032: lemon set 6
+    100034: lemon set 7
+    100036: Moka pot
+    100038: nacho
+    100040: Object001
+    100042: pastry cutting wheel
+    100044: peeler
+    100046: pizza
+    100048: pizza 1
+    100050: pizza turner
+    100052: pork cutlet
+    100054: pot
+    100056: pot 1
+    100058: pot 2
+    100060: potato masher
+    100062: Push bar dough
+    100064: risotto
+    100066: sausage
+    100068: shrimp risotto
+    100070: Squeezer
+    100072: tiramisu
+    400000: brustchetta
+    400002: canned beverage
+    400004: caprese salad
+    400006: curry
+    400008: fish and chips
+    400010: //RootNode
+    400012: grater
+    400014: kebab
+    400016: kettle
+    400018: labster
+    400020: lemon set
+    400022: lemon set 1
+    400024: lemon set 2
+    400026: lemon set 3
+    400028: lemon set 4
+    400030: lemon set 5
+    400032: lemon set 6
+    400034: lemon set 7
+    400036: Moka pot
+    400038: nacho
+    400040: Object001
+    400042: pastry cutting wheel
+    400044: peeler
+    400046: pizza
+    400048: pizza 1
+    400050: pizza turner
+    400052: pork cutlet
+    400054: pot
+    400056: pot 1
+    400058: pot 2
+    400060: potato masher
+    400062: Push bar dough
+    400064: risotto
+    400066: sausage
+    400068: shrimp risotto
+    400070: Squeezer
+    400072: tiramisu
+    2300000: brustchetta
+    2300002: canned beverage
+    2300004: caprese salad
+    2300006: curry
+    2300008: fish and chips
+    2300010: grater
+    2300012: kebab
+    2300014: kettle
+    2300016: labster
+    2300018: lemon set 1
+    2300020: lemon set 2
+    2300022: lemon set 3
+    2300024: lemon set 4
+    2300026: lemon set 5
+    2300028: lemon set 6
+    2300030: lemon set 7
+    2300032: Moka pot
+    2300034: nacho
+    2300036: Object001
+    2300038: pastry cutting wheel
+    2300040: peeler
+    2300042: pizza 1
+    2300044: pizza turner
+    2300046: pork cutlet
+    2300048: pot 1
+    2300050: pot 2
+    2300052: potato masher
+    2300054: Push bar dough
+    2300056: risotto
+    2300058: sausage
+    2300060: shrimp risotto
+    2300062: Squeezer
+    2300064: tiramisu
+    3300000: brustchetta
+    3300002: canned beverage
+    3300004: caprese salad
+    3300006: curry
+    3300008: fish and chips
+    3300010: grater
+    3300012: kebab
+    3300014: kettle
+    3300016: labster
+    3300018: lemon set 1
+    3300020: lemon set 2
+    3300022: lemon set 3
+    3300024: lemon set 4
+    3300026: lemon set 5
+    3300028: lemon set 6
+    3300030: lemon set 7
+    3300032: Moka pot
+    3300034: nacho
+    3300036: Object001
+    3300038: pastry cutting wheel
+    3300040: peeler
+    3300042: pizza 1
+    3300044: pizza turner
+    3300046: pork cutlet
+    3300048: pot 1
+    3300050: pot 2
+    3300052: potato masher
+    3300054: Push bar dough
+    3300056: risotto
+    3300058: sausage
+    3300060: shrimp risotto
+    3300062: Squeezer
+    3300064: tiramisu
+    4300000: canned beverage
+    4300002: pastry cutting wheel
+    4300004: Push bar dough
+    4300006: pizza turner
+    4300008: brustchetta
+    4300010: pork cutlet
+    4300012: Moka pot
+    4300014: labster
+    4300016: risotto
+    4300018: nacho
+    4300020: caprese salad
+    4300022: shrimp risotto
+    4300024: grater
+    4300026: curry
+    4300028: kebab
+    4300030: tiramisu
+    4300032: potato masher
+    4300034: peeler
+    4300036: kettle
+    4300038: Squeezer
+    4300040: fish and chips
+    4300042: sausage
+    4300044: pot
+    4300046: pot
+    4300048: lemon set
+    4300050: lemon set
+    4300052: lemon set
+    4300054: lemon set
+    4300056: lemon set
+    4300058: lemon set
+    4300060: lemon set
+    4300062: Object001
+    4300064: pizza
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
