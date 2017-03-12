@@ -42,11 +42,19 @@ public class RecipeManager : MonoBehaviour {
 		}
 		if (!CheckRecipes (heldItem, surfaceItem)) {
 			return;
-		}
-		Recipe r = RecipeChecker [heldItem.itemName + surfaceItem.itemName];
-        PlayerMachine.instance.CreateItem(r.outC.gameObject, heldItem.transform.position, heldItem.transform.rotation, false, heldItem.transform.parent);
+        }
+        if (heldItem.IsGrabbed())
+        {
+            heldItem.ForceStopInteracting();
+        }
+        if (surfaceItem.IsGrabbed())
+        {
+            surfaceItem.ForceStopInteracting();
+        }
+        Recipe r = RecipeChecker [heldItem.itemName + surfaceItem.itemName];
+        PlayerMachine.instance.CreateItem(r.outC.gameObject, heldItem.transform.localPosition, heldItem.transform.localRotation, true, heldItem.transform.parent);
 		if (r.outD != null) {
-            PlayerMachine.instance.CreateItem(r.outD.gameObject, surfaceItem.transform.position, surfaceItem.transform.rotation, false, surfaceItem.transform.parent);
+            PlayerMachine.instance.CreateItem(r.outD.gameObject, surfaceItem.transform.localPosition, surfaceItem.transform.localRotation, true, surfaceItem.transform.parent);
 		}
 		Destroy (heldItem);
         Destroy(surfaceItem);

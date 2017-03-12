@@ -104,6 +104,7 @@ public class PlayerMachine : MonoBehaviour {
                     if (vrtkG != null)
                     {
                         im.StartTouching(vrtkG.gameObject);
+                        vrtkG.grabbedObject = null;
                         vrtkT.SetTouchedObject(im.gameObject);
                         vrtkG.AttemptGrab();
                     }
