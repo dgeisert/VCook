@@ -113,6 +113,11 @@ namespace VRTK
             return touchedObject;
         }
 
+        public void SetTouchedObject(GameObject go)
+        {
+            touchedObject = go;
+        }
+
         /// <summary>
         /// The IsObjectInteractable method is used to check if a given game object is of type `VRTK_InteractableObject` and whether the object is enabled.
         /// </summary>

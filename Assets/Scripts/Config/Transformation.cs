@@ -10,8 +10,11 @@ public enum TransformationType {
 	Boil,
 	Fry,
 	Bin,
-	Sell,
-	Trash
+    Sell,
+    Roll,
+    Throw,
+    Grate,
+    Trash
 }
 
 [System.Serializable]

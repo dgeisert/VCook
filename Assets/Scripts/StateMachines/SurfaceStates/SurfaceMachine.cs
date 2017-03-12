@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using VRTK;
 
-public class SurfaceMachine : StateMachine {
+public class SurfaceMachine : VRTK_InteractableObject {
 
 	public Transform holdPosition, specialHoldPosition;
 	public List<ItemMachine> specialHold = new List<ItemMachine>();
@@ -10,46 +11,49 @@ public class SurfaceMachine : StateMachine {
 	public ItemMachine heldItem, specialHeldItem;
 	public TransformationType transformationType = TransformationType.None;
 	public bool holding = false, focus = false;
+    public Timer secondaryTimer, timer;
 
-	public void Start(){
-		Initiate ();
-	}
+	public void Start()
+    {
+        secondaryTimer = new Timer();
+    }
 
-	public override void InstanceInitiate(StateMachine checkMachine){
-		secondaryTimer = new Timer (this);
-	}
+    public override void StartUsing(GameObject usingObject)
+    {
+        base.StartUsing(usingObject);
+        if (usingObject != null)
+        {
+            if(usingObject.GetComponentInParent<SteamVR_TrackedObject>() != null)
+            {
+                switch (transformationType)
+                {
+                    case TransformationType.Bin:
+                        ItemMachine im = PlayerMachine.instance.CreateItem(specialHold[0].gameObject, Vector3.zero, Quaternion.identity, true, usingObject.transform);
+                        break;
+                        /*
+                    case TransformationType.Sell:
+                        if (hand.heldItem == null)
+                        {
+                            return false;
+                        }
+                        return SellItem(hand.heldItem);
+                        break;
+                    case TransformationType.Trash:
+                        Destroy(hand.heldItem.gameObject);
+                        break;
+                        */
+                    default:
 
-	public void Grab(){
-		/*
-		switch (transformationType) {
-		case TransformationType.Bin:
-			if (hand.heldItem == null && heldItem == null) {
-				hand.PickUpItem (PlayerMachine.instance.CreateItem (specialHold [0].gameObject, Vector3.zero, Quaternion.identity, true, hand.transform));
-				return true;
-			}
-			break;
-		case TransformationType.Sell:
-			if (hand.heldItem == null) {
-				return false;
-			}
-			return SellItem (hand.heldItem);
-			break;
-		case TransformationType.Trash:
-			Destroy (hand.heldItem.gameObject);
-			break;
-		default:
-			hand.PlaceObject(this);
-			break;
-		}
-		*/
+                        break;
+                }
+            }
+        }
 	}
 
 	public bool SellItem(ItemMachine item){
 		foreach (ItemMachine im in specialHold) {
 			if (im.itemName == item.itemName) {
-				PlayerMachine.instance.AddResource ("coins", item.value);
-				Destroy (item.gameObject);
-				return true;
+                return TransformationManager.instance.Sell(item);
 			}
 		}
 		return false;

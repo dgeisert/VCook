@@ -99,10 +99,13 @@ public class PlayerMachine : MonoBehaviour {
                 }
                 else
                 {
-                    VRTK.VRTK_TrackedController vrtkTC = parent.GetComponentInParent<VRTK.VRTK_TrackedController>();
-                    if (vrtkTC != null)
+                    VRTK.VRTK_InteractGrab vrtkG = parent.GetComponentInParent<VRTK.VRTK_InteractGrab>();
+                    VRTK.VRTK_InteractTouch vrtkT = parent.GetComponentInParent<VRTK.VRTK_InteractTouch>();
+                    if (vrtkG != null)
                     {
-                        im.Grabbed(vrtkTC.gameObject);
+                        im.StartTouching(vrtkG.gameObject);
+                        vrtkT.SetTouchedObject(im.gameObject);
+                        vrtkG.AttemptGrab();
                     }
                 }
             }

@@ -46,6 +46,13 @@ public class TransformationManager : MonoBehaviour {
 		return false;
 	}
 
+    public bool Sell(ItemMachine item)
+    {
+        PlayerMachine.instance.AddResource("coins", item.value);
+        Destroy(item.gameObject);
+        return true;
+    }
+
 	public bool Transformation(ItemMachine item, SurfaceMachine surface){
 		if (surface != null) {
 			if (surface.transformationType == TransformationType.Sell) {
