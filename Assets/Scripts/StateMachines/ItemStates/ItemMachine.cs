@@ -60,21 +60,15 @@ public class ItemMachine : VRTK_InteractableObject {
         sendRelease = true;
         if (e.interactingObject != null)
         {
-            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null)
-            {
-                int hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
-                NetworkManager.instance.SendGrabObject(this, hand);
-            }
+            int hand = (int)e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>().index;
+            NetworkManager.instance.SendGrabObject(this, hand);
         }
     }
     public override void OnInteractableObjectUngrabbed(InteractableObjectEventArgs e)
     {
         if (e.interactingObject != null)
         {
-            if (e.interactingObject.GetComponentInParent<SteamVR_TrackedObject>() != null && e.interactingObject.GetComponentInParent<OtherPlayerObject>() == null && sendRelease)
-            {
-                NetworkManager.instance.SendReleaseObject(this);
-            }
+            NetworkManager.instance.SendReleaseObject(this);
         }
 		base.OnInteractableObjectUngrabbed(e);
 		transform.SetParent (null);

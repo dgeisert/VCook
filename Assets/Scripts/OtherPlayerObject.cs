@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using VRTK;
 
 public class OtherPlayerObject : MonoBehaviour {
 
@@ -53,29 +54,44 @@ public class OtherPlayerObject : MonoBehaviour {
 	}
 
 	public void GrabObject(ItemMachine im, int hand){
-		Transform handTransform = head;
         im.sendRelease = true;
-		switch (hand) {
+        im.isKinematic = true;
+        switch (hand) {
 		case 2:
-			handTransform = head;
-			break;
+            im.transform.SetParent(head);
+            im.transform.localPosition = Vector3.zero;
+            break;
 		case 1:
-			handTransform = left;
-			break;
+            im.transform.SetParent(left);
+            if (im.grabAttachMechanicScript.leftSnapHandle != null)
+            {
+                im.transform.localPosition = -im.grabAttachMechanicScript.leftSnapHandle.localPosition;
+            }
+            else
+            {
+                im.transform.localPosition = Vector3.zero;
+            }
+            break;
 		case 0:
-			handTransform = right;
-			break;
+            im.transform.SetParent(right);
+            if (im.grabAttachMechanicScript.rightSnapHandle != null)
+            {
+                im.transform.localPosition = -im.grabAttachMechanicScript.rightSnapHandle.localPosition;
+            }
+            else
+            {
+                im.transform.localPosition = Vector3.zero;
+            }
+            break;
 		default:
 			break;
-		}
-		im.Grabbed (handTransform.gameObject);
-	}
+        }
+        im.updatePriority = 0;
+    }
 
-	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel, bool isMine = false){
-        im.sendRelease = isMine;
-		if (im.transform.parent != null) {
-			im.Ungrabbed (im.transform.parent.gameObject);
-		}
+	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel, bool isMine = false)
+    {
+        im.transform.SetParent(null);
 		im.transform.position = pos;
 		im.transform.rotation = rot;
 		im.rb.velocity = vel;
