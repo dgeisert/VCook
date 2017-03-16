@@ -11,7 +11,6 @@ public class ItemMachine : VRTK_InteractableObject {
 	public Rigidbody rb;
 	public string itemID;
 	static string glyphs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-	public int updatePriority = 0;
     public int phase = 0;
     public bool sendRelease = true;
 
@@ -24,29 +23,6 @@ public class ItemMachine : VRTK_InteractableObject {
 		}
 		NetworkManager.instance.allObjects.Add (itemID, this);
 	}
-
-	public void Update(){
-		if (NetworkManager.instance.IsInLobby () && NetworkManager.instance.IsHost()) {
-			if (transform.parent != null) {
-				if (GetComponentInParent<OtherPlayerObject> () != null) {
-					updatePriority = 0;
-					return;
-				}
-			}
-			updatePriority += Mathf.CeilToInt (rb.velocity.magnitude * 100);
-			updatePriority += Mathf.CeilToInt (rb.angularVelocity.magnitude * 100);
-			updatePriority++;
-		}
-	}
-	public bool ShouldUpdate(){
-		if (updatePriority > 1000)
-        {
-            updatePriority = 0;
-            return true;
-		} else {
-			return false;
-		}
-	}
 	public void SetID(string SetID){
 		itemID = SetID;
 		NetworkManager.instance.allObjects.Add (itemID, this);
@@ -56,7 +32,6 @@ public class ItemMachine : VRTK_InteractableObject {
 	{
         base.OnInteractableObjectGrabbed(e);
 		transform.SetParent (e.interactingObject.transform);
-		updatePriority = 0;
         sendRelease = true;
         if (e.interactingObject != null)
         {
@@ -72,11 +47,9 @@ public class ItemMachine : VRTK_InteractableObject {
         }
 		base.OnInteractableObjectUngrabbed(e);
 		transform.SetParent (null);
-		updatePriority = 1001;
     }
 
 	void OnCollisionEnter (Collision col){
-		updatePriority = 1001;
 		ItemMachine im = col.collider.GetComponentInParent<ItemMachine> ();
 		if (im != null)
         {

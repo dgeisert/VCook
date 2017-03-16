@@ -86,7 +86,6 @@ public class OtherPlayerObject : MonoBehaviour {
 		default:
 			break;
         }
-        im.updatePriority = 0;
     }
 
 	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel, bool isMine = false)

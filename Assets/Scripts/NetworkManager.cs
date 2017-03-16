@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Steamworks;
 using VRTK;
+using TMPro;
+using UnityEngine.SceneManagement;
 
 public enum InterpretationType {
 	Ping = 0,
@@ -15,6 +17,7 @@ public enum InterpretationType {
 	ReleaseObject = 5,
 	DestroyObject = 6,
 	UpdateObjects = 7,
+	SceneChange = 8,
 }
 
 public class NetworkManager : MonoBehaviour {
@@ -35,7 +38,7 @@ public class NetworkManager : MonoBehaviour {
     public bool isHost = false;
 	public Dictionary<ulong, OtherPlayerObject> otherPlayers = new Dictionary<ulong, OtherPlayerObject>();
 	public GameObject otherPlayerObject;
-	float lazyUpdateTimer;
+	float lazyUpdateTimer, objectUpdateTimer;
 	Dictionary<string, float> timestamps = new Dictionary<string, float>();
 
 	void Awake(){
@@ -56,6 +59,7 @@ public class NetworkManager : MonoBehaviour {
 			Callback_p2PSessionRequest = Callback<P2PSessionRequest_t>.Create(OnP2PSessionRequest);
 		}
 		lazyUpdateTimer = Time.time;
+		objectUpdateTimer = Time.time;
         foreach(ItemMachine im in GameObject.FindObjectsOfType<ItemMachine>())
         {
             im.Init();
@@ -75,9 +79,12 @@ public class NetworkManager : MonoBehaviour {
 			SendMyPosition ();
 			Talk ();
             if (IsHost())
-            {
-                SendObjectUpdate();
-            }
+			{
+				if (objectUpdateTimer + 0.1f < Time.time) {
+					objectUpdateTimer = Time.time;
+					SendObjectUpdate();
+				}
+			}
 			if (lazyUpdateTimer + 3 < Time.time) {
 				lazyUpdateTimer = Time.time;
 				CheckLobby ();
@@ -87,6 +94,8 @@ public class NetworkManager : MonoBehaviour {
 
 	public void CheckLobby(){
 		if (SteamManager.Initialized) {
+			GameObject lobbyText = GameObject.Find ("Lobby");
+			string lobbyPeople = "";
 			List<ulong> inLobby = new List<ulong> ();
 			int lobbyCount = SteamMatchmaking.GetNumLobbyMembers (lobbyID);
 			for (int i = 0; i < lobbyCount; i++) {
@@ -94,6 +103,18 @@ public class NetworkManager : MonoBehaviour {
 				inLobby.Add (csid.m_SteamID);
 				if (!ExpectingClient.Contains (csid.m_SteamID) && !(SteamUser.GetSteamID ().m_SteamID == csid.m_SteamID)) {
 					NewConnection (csid.m_SteamID);
+				}
+				if (lobbyText != null) {
+					TextMeshPro tmp = lobbyText.GetComponent<TextMeshPro> ();
+					if (tmp != null) {
+						lobbyPeople += SteamFriends.GetFriendPersonaName (csid) + '\n';
+					}
+				}
+			}
+			if (lobbyText != null) {
+				TextMeshPro tmp = lobbyText.GetComponent<TextMeshPro> ();
+				if (tmp != null) {
+					tmp.text = lobbyPeople;
 				}
 			}
 			List<ulong> endConnections = new List<ulong> ();
@@ -162,6 +183,9 @@ public class NetworkManager : MonoBehaviour {
 			break;
 		case 7://update objects
 			ParseUpdateObjects(timestamp, dataIn, remoteId);
+			break;
+		case 8://update objects
+			ParseSceneChange(timestamp, dataIn, remoteId);
 			break;
 		default:
 			Debug.Log("Unknown Data");
@@ -373,10 +397,8 @@ public class NetworkManager : MonoBehaviour {
         {
             if(kvp.Value != null)
             {
-				if (kvp.Value.ShouldUpdate()) {
-					rbsBytes.Add (RigidbodyBytes (new List<Rigidbody> { kvp.Value.rb }));
-					strBytes.Add (StringToByte (kvp.Value.itemID));
-				}
+				rbsBytes.Add (RigidbodyBytes (new List<Rigidbody> { kvp.Value.rb }));
+				strBytes.Add (StringToByte (kvp.Value.itemID));
             }
             else
             {
@@ -420,15 +442,31 @@ public class NetworkManager : MonoBehaviour {
                 float[] f = ByteToFloatArray(rbBytes);
                 if (allObjects[itemID] != null)
                 {
-                    allObjects[itemID].SetRB(
-                        new Vector3(f[0], f[1], f[2]),
-                        new Quaternion(f[3], f[4], f[5], f[6]),
-                        new Vector3(f[7], f[8], f[9]),
-                        new Vector3(f[10], f[11], f[12])
-                        );
+					if (allObjects [itemID].GetComponentsInParent<OtherPlayerObject> () == null) {
+						allObjects [itemID].SetRB (
+							new Vector3 (f [0], f [1], f [2]),
+							new Quaternion (f [3], f [4], f [5], f [6]),
+							new Vector3 (f [7], f [8], f [9]),
+							new Vector3 (f [10], f [11], f [12])
+						);
+					}
                 }
             }
         }
+	}
+
+	public void SendSceneChange(string scene)
+	{
+		byte[] stringBytes = StringToByte(scene);
+		byte[] bytes = new byte[stringBytes.Length + 1];
+		Array.Copy(stringBytes, 0, bytes, 1, stringBytes.Length);
+		bytes[0] = (byte)((int)InterpretationType.SceneChange);
+		SendBytesReliable(bytes);
+	}
+	void ParseSceneChange(float timestamp, byte[] dataIn, CSteamID remoteId){
+		string scene = ByteToString(dataIn);
+		Debug.Log("Load Scene: " + scene);
+		SceneManager.LoadSceneAsync (scene);
 	}
 
 
