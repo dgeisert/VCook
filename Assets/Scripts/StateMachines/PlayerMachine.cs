@@ -6,7 +6,6 @@ public class PlayerMachine : MonoBehaviour {
 
 	public static GameObject playerObject;
 	public static PlayerMachine instance;
-	public Transform headset, left, right;
 	private Dictionary<string, int> resources;
 	private Dictionary<string, GameObject> loadedResources;
     public bool rememberLocation = false;

@@ -4,6 +4,7 @@ using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 using Steamworks;
+using VRTK;
 
 public enum InterpretationType {
 	Ping = 0,
@@ -218,10 +219,14 @@ public class NetworkManager : MonoBehaviour {
 
 
 	void SendMyPosition(){
+        if(VRTK.VRTK_SDKManager.instance == null)
+        {
+            return;
+        }
 		byte[] bytes = ItemsPositionBytes(new List<Transform> {
-			PlayerMachine.instance.headset
-			, PlayerMachine.instance.right
-			, PlayerMachine.instance.left
+            VRTK.VRTK_SDKManager.instance.actualHeadset.transform,
+            VRTK.VRTK_SDKManager.instance.actualRightController.transform,
+            VRTK.VRTK_SDKManager.instance.actualLeftController.transform
 		});
 		byte[] bytes2 = new byte[bytes.Length + 1];
 		Array.Copy (bytes, 0, bytes2, 1, bytes.Length);

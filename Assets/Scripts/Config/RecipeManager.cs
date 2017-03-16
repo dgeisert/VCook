@@ -36,27 +36,34 @@ public class RecipeManager : MonoBehaviour {
 		return RecipeChecker.ContainsKey(heldItem.itemName + surfaceItem.itemName);
 	}
 
-	public void RecipeOutput (ItemMachine heldItem, ItemMachine surfaceItem){
-		if (heldItem == null || surfaceItem == null) {
-			return;
-		}
-		if (!CheckRecipes (heldItem, surfaceItem)) {
-			return;
-        }
-        if (heldItem.IsGrabbed())
+    public void RecipeOutput(ItemMachine heldItem, ItemMachine surfaceItem)
+    {
+        if ((NetworkManager.instance.IsInLobby() && NetworkManager.instance.IsHost()) || !NetworkManager.instance.IsInLobby())
         {
-            heldItem.ForceStopInteracting();
+            if (heldItem == null || surfaceItem == null)
+            {
+                return;
+            }
+            if (!CheckRecipes(heldItem, surfaceItem))
+            {
+                return;
+            }
+            if (heldItem.IsGrabbed())
+            {
+                heldItem.ForceStopInteracting();
+            }
+            if (surfaceItem.IsGrabbed())
+            {
+                surfaceItem.ForceStopInteracting();
+            }
+            Recipe r = RecipeChecker[heldItem.itemName + surfaceItem.itemName];
+            PlayerMachine.instance.CreateItem(r.outC.gameObject, heldItem.transform.localPosition, heldItem.transform.localRotation, true, heldItem.transform.parent);
+            if (r.outD != null)
+            {
+                PlayerMachine.instance.CreateItem(r.outD.gameObject, surfaceItem.transform.localPosition, surfaceItem.transform.localRotation, true, surfaceItem.transform.parent);
+            }
+            Destroy(heldItem);
+            Destroy(surfaceItem);
         }
-        if (surfaceItem.IsGrabbed())
-        {
-            surfaceItem.ForceStopInteracting();
-        }
-        Recipe r = RecipeChecker [heldItem.itemName + surfaceItem.itemName];
-        PlayerMachine.instance.CreateItem(r.outC.gameObject, heldItem.transform.localPosition, heldItem.transform.localRotation, true, heldItem.transform.parent);
-		if (r.outD != null) {
-            PlayerMachine.instance.CreateItem(r.outD.gameObject, surfaceItem.transform.localPosition, surfaceItem.transform.localRotation, true, surfaceItem.transform.parent);
-		}
-		Destroy (heldItem);
-        Destroy(surfaceItem);
-	}
+    }
 }

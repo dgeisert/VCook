@@ -32,18 +32,25 @@ public class TransformationManager : MonoBehaviour {
 	}
 
 	public bool Transformation(ItemMachine item, ItemMachine heldItem){
-		if (heldItem != null) {
-			if (CheckTransformation (item, heldItem.transformationType) && heldItem.transformationType == heldItem.transformationType) {
-				item.phase++;
-				if (item.phase >= item.phases) {
-                    PlayerMachine.instance.CreateItem(TransformationChecker[item.itemName + heldItem.transformationType.ToString()].outItem.gameObject, item.transform.position, item.transform.rotation, false, item.transform.parent);
-                    Destroy(item);
+        if ((NetworkManager.instance.IsInLobby() && NetworkManager.instance.IsHost()) || !NetworkManager.instance.IsInLobby())
+        {
+            if (heldItem != null)
+            {
+                if (CheckTransformation(item, heldItem.transformationType) && heldItem.transformationType == heldItem.transformationType)
+                {
+                    item.phase++;
+                    if (item.phase >= item.phases)
+                    {
+                        PlayerMachine.instance.CreateItem(TransformationChecker[item.itemName + heldItem.transformationType.ToString()].outItem.gameObject, item.transform.position, item.transform.rotation, false, item.transform.parent);
+                        Destroy(item);
+                        return true;
+                    }
                     return true;
-				}
-				return true;
-			}
-		}
-		return false;
+                }
+            }
+            return false;
+        }
+        return false;
 	}
 
     public bool Sell(ItemMachine item)
@@ -53,22 +60,30 @@ public class TransformationManager : MonoBehaviour {
         return true;
     }
 
-	public bool Transformation(ItemMachine item, SurfaceMachine surface){
-		if (surface != null) {
-			if (surface.transformationType == TransformationType.Sell) {
-				return surface.SellItem (item);
-			}
-			if (CheckTransformation (item, surface.transformationType) && surface.transformationType == surface.transformationType) {
-				item.phase++;
-				if (item.phase >= item.phases)
+	public bool Transformation(ItemMachine item, SurfaceMachine surface)
+    {
+        if ((NetworkManager.instance.IsInLobby() && NetworkManager.instance.IsHost()) || !NetworkManager.instance.IsInLobby())
+        {
+            if (surface != null)
+            {
+                if (surface.transformationType == TransformationType.Sell)
                 {
-                    PlayerMachine.instance.CreateItem(TransformationChecker[item.itemName + surface.transformationType.ToString()].outItem.gameObject, item.transform.position, item.transform.rotation, false, item.transform.parent);
-                    Destroy(item);
+                    return surface.SellItem(item);
+                }
+                if (CheckTransformation(item, surface.transformationType) && surface.transformationType == surface.transformationType)
+                {
+                    item.phase++;
+                    if (item.phase >= item.phases)
+                    {
+                        PlayerMachine.instance.CreateItem(TransformationChecker[item.itemName + surface.transformationType.ToString()].outItem.gameObject, item.transform.position, item.transform.rotation, false, item.transform.parent);
+                        Destroy(item);
+                        return true;
+                    }
                     return true;
-				}
-				return true;
-			}
-		}
-		return false;
+                }
+            }
+            return false;
+        }
+        return false;
 	}
 }
