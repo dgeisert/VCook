@@ -223,7 +223,7 @@ public class NetworkManager : MonoBehaviour {
         {
             return;
         }
-		byte[] bytes = ItemsPositionBytes(new List<Transform> {
+		byte[] bytes = ItemsPositionBytes(new List<Transform> { 
             VRTK.VRTK_SDKManager.instance.actualHeadset.transform,
             VRTK.VRTK_SDKManager.instance.actualRightController.transform,
             VRTK.VRTK_SDKManager.instance.actualLeftController.transform
