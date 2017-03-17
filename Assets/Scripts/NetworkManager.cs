@@ -17,7 +17,8 @@ public enum InterpretationType {
 	ReleaseObject = 5,
 	DestroyObject = 6,
 	UpdateObjects = 7,
-	SceneChange = 8,
+    SceneChange = 8,
+    UseObject = 9,
 }
 
 public class NetworkManager : MonoBehaviour {
@@ -73,7 +74,7 @@ public class NetworkManager : MonoBehaviour {
 				SetupServer ();
 			}
 			if (Input.GetKeyDown (KeyCode.I)) {
-				SteamFriends.ActivateGameOverlayInviteDialog (lobbyID);
+                InviteFriend();
 			}
 			ReadPackets ();
 			SendMyPosition ();
@@ -184,10 +185,13 @@ public class NetworkManager : MonoBehaviour {
 		case 7://update objects
 			ParseUpdateObjects(timestamp, dataIn, remoteId);
 			break;
-		case 8://update objects
-			ParseSceneChange(timestamp, dataIn, remoteId);
-			break;
-		default:
+        case 8://scene change
+            ParseSceneChange(timestamp, dataIn, remoteId);
+            break;
+        case 9://use object
+            ParseSceneChange(timestamp, dataIn, remoteId);
+            break;
+            default:
 			Debug.Log("Unknown Data");
 			break;
 		}
@@ -434,8 +438,9 @@ public class NetworkManager : MonoBehaviour {
         {
             byte[] idBytes = new byte[sizeof(char) * 10];
             byte[] rbBytes = new byte[13 * 4];
-            Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4), idBytes, 0, idBytes.Length);
+            Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4 + 1), idBytes, 0, idBytes.Length);
             Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, rbBytes, 0, rbBytes.Length);
+            int phase = (int) dataIn[i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10 + 1];
             string itemID = ByteToString(idBytes);
             if (allObjects.ContainsKey(itemID))
             {
@@ -462,7 +467,8 @@ public class NetworkManager : MonoBehaviour {
 		Array.Copy(stringBytes, 0, bytes, 1, stringBytes.Length);
 		bytes[0] = (byte)((int)InterpretationType.SceneChange);
 		SendBytesReliable(bytes);
-	}
+        SceneManager.LoadSceneAsync(scene);
+    }
 	void ParseSceneChange(float timestamp, byte[] dataIn, CSteamID remoteId){
 		string scene = ByteToString(dataIn);
 		Debug.Log("Load Scene: " + scene);
@@ -561,6 +567,11 @@ public class NetworkManager : MonoBehaviour {
 			CreateLobby (ELobbyType.k_ELobbyTypeFriendsOnly, 2);
 		}
 	}
+
+    public void InviteFriend()
+    {
+        SteamFriends.ActivateGameOverlayInviteDialog(lobbyID);
+    }
 
 	SteamAPICall_t CreateLobby (ELobbyType eLobbyType, int maxMembers){
 		return SteamMatchmaking.CreateLobby (eLobbyType, maxMembers);

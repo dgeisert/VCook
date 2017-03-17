@@ -22,7 +22,7 @@
 
         private void handlePush(object sender, Control3DEventArgs e)
         {
-            Debug.Log("Pushed");
+            Debug.Log("Pushedby " + sender.ToString());
 
             GameObject newGo = (GameObject)Instantiate(go, dispenseLocation.position, Quaternion.identity);
             Destroy(newGo, 10f);
