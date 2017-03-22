@@ -64,7 +64,7 @@ public class NetworkManager : MonoBehaviour {
 		SceneManager.sceneLoaded += InitObjectsInScene;
 	}
 
-	void InitObjectsInScene(){
+	void InitObjectsInScene(Scene scene, LoadSceneMode mode){
 		foreach(ItemMachine im in GameObject.FindObjectsOfType<ItemMachine>())
 		{
 			im.Init();
@@ -371,10 +371,6 @@ public class NetworkManager : MonoBehaviour {
         Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
         Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
         Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
-		Debug.Log (remoteId);
-		Debug.Log (remoteId.m_SteamID);
-		Debug.Log (ByteToString (releaseBytesID));
-		Debug.Log (allObjects [ByteToString (releaseBytesID)]);
         otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], relPos, relRot, relVel, relAngVel);
     }
 
