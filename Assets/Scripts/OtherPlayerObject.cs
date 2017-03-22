@@ -54,7 +54,6 @@ public class OtherPlayerObject : MonoBehaviour {
 	}
 
 	public void GrabObject(ItemMachine im, int hand = 0){
-		Debug.LogError ("Grabbing: " + im.itemID + " with hand: " + hand.ToString());
         switch (hand) {
 		case 2:
             im.transform.SetParent(head);

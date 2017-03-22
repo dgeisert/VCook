@@ -324,11 +324,11 @@ public class NetworkManager : MonoBehaviour {
         string itemName = ByteToString(instantiateName);
         if (RecipeManager.instance.itemList.ContainsKey(itemName))
         {
-            PlayerMachine.instance.CreateItem(RecipeManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar), true);
+            PlayerMachine.instance.CreateItem(RecipeManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar), !IsHost());
         }
         else if(TransformationManager.instance.itemList.ContainsKey(itemName))
         {
-            PlayerMachine.instance.CreateItem(TransformationManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar), true);
+            PlayerMachine.instance.CreateItem(TransformationManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar), !IsHost());
         }
 		Debug.Log("Instantiate: " + itemName);
 	}
