@@ -317,11 +317,14 @@ public class NetworkManager : MonoBehaviour {
         byte[] instantiateName = new byte[dataIn.Length - instantiateFloat.Length - instantiateChar.Length];
         Array.Copy(dataIn, 0, instantiateChar, 0, instantiateChar.Length);
         Array.Copy(dataIn, instantiateChar.Length, instantiateFloat, 0, instantiateFloat.Length);
-        Array.Copy(dataIn, instantiateChar.Length + instantiateFloat.Length, instantiateName, 0, instantiateName.Length);
+		Array.Copy(dataIn, instantiateChar.Length + instantiateFloat.Length, instantiateName, 0, instantiateName.Length);
+		string itemName = ByteToString(instantiateName);
+		if (allObjects.ContainsKey (itemName)) {
+			return;
+		}
         float[] f = ByteToFloatArray(instantiateFloat);
 		Vector3 pos = new Vector3(f[0], f[1], f[2]);
 		Quaternion quat = new Quaternion(f[3], f[4], f[5], f[6]);
-        string itemName = ByteToString(instantiateName);
         if (RecipeManager.instance.itemList.ContainsKey(itemName))
         {
             PlayerMachine.instance.CreateItem(RecipeManager.instance.itemList[itemName].gameObject, pos, quat, false, null, ByteToString(instantiateChar), !IsHost());
