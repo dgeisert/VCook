@@ -61,10 +61,14 @@ public class NetworkManager : MonoBehaviour {
 		}
 		lazyUpdateTimer = Time.time;
 		objectUpdateTimer = Time.time;
-        foreach(ItemMachine im in GameObject.FindObjectsOfType<ItemMachine>())
-        {
-            im.Init();
-        }
+		SceneManager.sceneLoaded += InitObjectsInScene;
+	}
+
+	void InitObjectsInScene(){
+		foreach(ItemMachine im in GameObject.FindObjectsOfType<ItemMachine>())
+		{
+			im.Init();
+		}
 	}
 
 	public void Update(){
@@ -367,6 +371,10 @@ public class NetworkManager : MonoBehaviour {
         Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
         Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
         Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
+		Debug.Log (remoteId);
+		Debug.Log (remoteId.m_SteamID);
+		Debug.Log (ByteToString (releaseBytesID));
+		Debug.Log (allObjects [ByteToString (releaseBytesID)]);
         otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], relPos, relRot, relVel, relAngVel);
     }
 
@@ -661,10 +669,10 @@ public class NetworkManager : MonoBehaviour {
                 f[0 + i * 7] = trs[i].position.x;
                 f[1 + i * 7] = trs[i].position.y;
                 f[2 + i * 7] = trs[i].position.z;
-                f[3 + i * 7] = trs[i].rotation.w;
-                f[4 + i * 7] = trs[i].rotation.x;
-                f[5 + i * 7] = trs[i].rotation.y;
-                f[6 + i * 7] = trs[i].rotation.z;
+				f[3 + i * 7] = trs[i].rotation.x;
+				f[4 + i * 7] = trs[i].rotation.y;
+				f[5 + i * 7] = trs[i].rotation.z;
+				f[6 + i * 7] = trs[i].rotation.w;
             }
             else
             {
