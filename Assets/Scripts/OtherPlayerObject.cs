@@ -54,27 +54,32 @@ public class OtherPlayerObject : MonoBehaviour {
 	}
 
 	public void GrabObject(ItemMachine im, int hand = 0){
+		Debug.LogError ("Grabbing: " + im.itemID + " with hand: " + hand.ToString());
         switch (hand) {
 		case 2:
             im.transform.SetParent(head);
             im.transform.localPosition = Vector3.zero;
             break;
+		case 4:
 		case 1:
             im.transform.SetParent(left);
             if (im.grabAttachMechanicScript.leftSnapHandle != null)
-            {
-                im.transform.localPosition = -im.grabAttachMechanicScript.leftSnapHandle.localPosition;
+			{
+				im.transform.rotation = left.transform.rotation * Quaternion.Euler (im.grabAttachMechanicScript.leftSnapHandle.localEulerAngles);
+				im.transform.position = left.transform.position - (im.grabAttachMechanicScript.leftSnapHandle.transform.position - im.transform.position);
             }
             else
             {
                 im.transform.localPosition = Vector3.zero;
             }
-            break;
+			break;
+		case 3:
 		case 0:
             im.transform.SetParent(right);
             if (im.grabAttachMechanicScript.rightSnapHandle != null)
-            {
-                im.transform.localPosition = -im.grabAttachMechanicScript.rightSnapHandle.localPosition;
+			{
+				im.transform.rotation = right.transform.rotation * Quaternion.Euler (im.grabAttachMechanicScript.rightSnapHandle.localEulerAngles);
+				im.transform.position = right.transform.position - (im.grabAttachMechanicScript.rightSnapHandle.transform.position - im.transform.position);
             }
             else
             {
