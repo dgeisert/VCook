@@ -28,7 +28,7 @@ public class SurfaceMachine : VRTK_InteractableObject {
                 switch (transformationType)
                 {
                     case TransformationType.Bin:
-                        ItemMachine im = PlayerMachine.instance.CreateItem(specialHold[0].gameObject, Vector3.zero, Quaternion.identity, true, usingObject.transform);
+                        ItemMachine im = PlayerMachine.instance.CreateItem(specialHold[0].gameObject, Vector3.zero, Quaternion.identity, true, usingObject.transform, "", true);
                         break;
                         /*
                     case TransformationType.Sell:
