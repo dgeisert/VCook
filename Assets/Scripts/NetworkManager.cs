@@ -189,7 +189,7 @@ public class NetworkManager : MonoBehaviour {
             ParseSceneChange(timestamp, dataIn, remoteId);
             break;
         case 9://use object
-            ParseSceneChange(timestamp, dataIn, remoteId);
+            ParseUseObject(timestamp, dataIn, remoteId);
             break;
             default:
 			Debug.Log("Unknown Data");
@@ -343,31 +343,47 @@ public class NetworkManager : MonoBehaviour {
         Array.Copy(dataIn, 1, grabBytes, 0, grabBytes.Length);
         Debug.Log("Grab: " + ByteToString(grabBytes));
         otherPlayers[remoteId.m_SteamID].GrabObject(allObjects[ByteToString(grabBytes)], (int)dataIn[0]);
-	}
+    }
 
-	public void SendReleaseObject(ItemMachine im)
-	{
-		byte[] rbBytes = NetworkManager.instance.RigidbodyBytes(new List<Rigidbody> { im.rb });
-		byte[] stringBytes = StringToByte(im.itemID);
-		byte[] bytes = new byte[rbBytes.Length + stringBytes.Length + 1];
-		bytes[0] = (byte)((int)InterpretationType.ReleaseObject);
-		Array.Copy (stringBytes, 0, bytes, 1, stringBytes.Length);
-		Array.Copy (rbBytes, 0, bytes, 1 + stringBytes.Length, rbBytes.Length);
-		SendBytesReliable(bytes);
-	}
-	void ParseReleaseObject(float timestamp, byte[] dataIn, CSteamID remoteId){
-		byte[] releaseBytesID = new byte[sizeof(char) * 10];
-		byte[] releaseFloatBytes = new byte[4 * 13];
-		Array.Copy(dataIn, 0, releaseBytesID, 0, releaseBytesID.Length);
-		Array.Copy(dataIn, releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
+    public void SendReleaseObject(ItemMachine im)
+    {
+        byte[] rbBytes = NetworkManager.instance.RigidbodyBytes(new List<Rigidbody> { im.rb });
+        byte[] stringBytes = StringToByte(im.itemID);
+        byte[] bytes = new byte[rbBytes.Length + stringBytes.Length + 1];
+        bytes[0] = (byte)((int)InterpretationType.ReleaseObject);
+        Array.Copy(stringBytes, 0, bytes, 1, stringBytes.Length);
+        Array.Copy(rbBytes, 0, bytes, 1 + stringBytes.Length, rbBytes.Length);
+        SendBytesReliable(bytes);
+    }
+    void ParseReleaseObject(float timestamp, byte[] dataIn, CSteamID remoteId)
+    {
+        byte[] releaseBytesID = new byte[sizeof(char) * 10];
+        byte[] releaseFloatBytes = new byte[4 * 13];
+        Array.Copy(dataIn, 0, releaseBytesID, 0, releaseBytesID.Length);
+        Array.Copy(dataIn, releaseBytesID.Length, releaseFloatBytes, 0, releaseFloatBytes.Length);
         Debug.Log("Release: " + ByteToString(releaseBytesID));
         float[] releaseFloats = ByteToFloatArray(releaseFloatBytes);
-		Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
-		Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
-		Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
-		Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
-		otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], relPos, relRot, relVel, relAngVel);
-	}
+        Vector3 relPos = new Vector3(releaseFloats[0], releaseFloats[1], releaseFloats[2]);
+        Quaternion relRot = new Quaternion(releaseFloats[3], releaseFloats[4], releaseFloats[5], releaseFloats[6]);
+        Vector3 relVel = new Vector3(releaseFloats[7], releaseFloats[8], releaseFloats[9]);
+        Vector3 relAngVel = new Vector3(releaseFloats[10], releaseFloats[11], releaseFloats[12]);
+        otherPlayers[remoteId.m_SteamID].ReleaseObject(allObjects[ByteToString(releaseBytesID)], relPos, relRot, relVel, relAngVel);
+    }
+
+    public void SendUseObject(ItemMachine im, int hand = 1)
+    {
+        byte[] stringBytes = StringToByte(im.itemID);
+        Debug.Log("Sending Use " + im.itemID);
+        byte[] bytes = new byte[stringBytes.Length + 1];
+        bytes[0] = (byte)((int)InterpretationType.UseObject);
+        Array.Copy(stringBytes, 0, bytes, 1, stringBytes.Length);
+        SendBytes(bytes);
+    }
+    void ParseUseObject(float timestamp, byte[] dataIn, CSteamID remoteId)
+    {
+        Debug.Log("Use: " + ByteToString(dataIn));
+        allObjects[ByteToString(dataIn)].Use();
+    }
 
     public void DestroyObject(ItemMachine im)
     {
@@ -397,12 +413,14 @@ public class NetworkManager : MonoBehaviour {
         List<byte[]> rbsBytes = new List<byte[]>();
         List<string> removes = new List<string>();
         List<byte[]> strBytes = new List<byte[]>();
-        foreach(KeyValuePair<string, ItemMachine> kvp in allObjects)
+        List<byte> phaseBytes = new List<byte>();
+        foreach (KeyValuePair<string, ItemMachine> kvp in allObjects)
         {
             if(kvp.Value != null)
             {
 				rbsBytes.Add (RigidbodyBytes (new List<Rigidbody> { kvp.Value.rb }));
-				strBytes.Add (StringToByte (kvp.Value.itemID));
+                strBytes.Add(StringToByte(kvp.Value.itemID));
+                phaseBytes.Add((byte) kvp.Value.phase);
             }
             else
             {
@@ -413,11 +431,12 @@ public class NetworkManager : MonoBehaviour {
         {
             allObjects.Remove(str);
         }
-        byte[] bytes = new byte[rbsBytes.Count * (sizeof(char) * 10 + 13 * 4) + 1];
+        byte[] bytes = new byte[rbsBytes.Count * (sizeof(char) * 10 + 13 * 4 + 1) + 1];
         for(int i = 0; i < rbsBytes.Count; i++)
         {
-            Array.Copy(strBytes[i], 0, bytes, 1 + i * (sizeof(char) * 10 + 13 * 4), sizeof(char) * 10);
-            Array.Copy(rbsBytes[i], 0, bytes, 1 + i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, 13 * 4);
+            Array.Copy(strBytes[i], 0, bytes, 1 + i * (sizeof(char) * 10 + 13 * 4 + 1), sizeof(char) * 10);
+            Array.Copy(rbsBytes[i], 0, bytes, 1 + i * (sizeof(char) * 10 + 13 * 4 + 1) + sizeof(char) * 10, 13 * 4);
+            bytes[(i + 1) * (sizeof(char) * 10 + 13 * 4)] = phaseBytes[i];
         }
         bytes[0] = (byte)((int)InterpretationType.UpdateObjects);
         SendBytes(bytes);
@@ -439,8 +458,8 @@ public class NetworkManager : MonoBehaviour {
             byte[] idBytes = new byte[sizeof(char) * 10];
             byte[] rbBytes = new byte[13 * 4];
             Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4 + 1), idBytes, 0, idBytes.Length);
-            Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10, rbBytes, 0, rbBytes.Length);
-            int phase = (int) dataIn[i * (sizeof(char) * 10 + 13 * 4) + sizeof(char) * 10 + 1];
+            Array.Copy(dataIn, i * (sizeof(char) * 10 + 13 * 4 + 1) + sizeof(char) * 10, rbBytes, 0, rbBytes.Length);
+            int phase = (int) dataIn[(i + 1) * (sizeof(char) * 10 + 13 * 4 + 1) - 1];
             string itemID = ByteToString(idBytes);
             if (allObjects.ContainsKey(itemID))
             {

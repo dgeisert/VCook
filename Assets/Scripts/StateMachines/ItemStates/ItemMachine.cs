@@ -13,6 +13,9 @@ public class ItemMachine : VRTK_InteractableObject {
 	static string glyphs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
     public int phase = 0;
     public bool sendRelease = true;
+    public AudioSource audio;
+    public AudioClip defaultClip;
+    public Dictionary<ItemMachine, AudioClip> specialtyClips = new Dictionary<ItemMachine, AudioClip>();
 
 	public void Init(){
 		if (itemID == null || itemID == "") {
@@ -21,6 +24,10 @@ public class ItemMachine : VRTK_InteractableObject {
 				itemID += glyphs [Random.Range (0, glyphs.Length)];
 			}
 		}
+        if(audio == null)
+        {
+            audio = GetComponent<AudioSource>();
+        }
 		NetworkManager.instance.allObjects.Add (itemID, this);
 	}
 	public void SetID(string SetID){
@@ -45,14 +52,28 @@ public class ItemMachine : VRTK_InteractableObject {
         {
             NetworkManager.instance.SendReleaseObject(this);
         }
-		base.OnInteractableObjectUngrabbed(e);
-		transform.SetParent (null);
+        base.OnInteractableObjectUngrabbed(e);
+        transform.SetParent(null);
+    }
+    public override void OnInteractableObjectUsed(InteractableObjectEventArgs e)
+    {
+        NetworkManager.instance.SendUseObject(this);
+        base.OnInteractableObjectUsed(e);
     }
 
-	void OnCollisionEnter (Collision col){
+    void OnCollisionEnter (Collision col){
 		ItemMachine im = col.collider.GetComponentInParent<ItemMachine> ();
 		if (im != null)
         {
+            //audio.clip = defaultClip;
+            foreach(KeyValuePair<ItemMachine, AudioClip> kvp in specialtyClips)
+            {
+                if (im.itemName == kvp.Key.itemName)
+                {
+                    //audio.clip = kvp.Value;
+                }
+            }
+            //audio.Play();
             RecipeManager.instance.RecipeOutput(this, im);
             if (this.transformationType != TransformationType.None)
             {
@@ -76,5 +97,10 @@ public class ItemMachine : VRTK_InteractableObject {
     public void OnDestroy()
     {
         NetworkManager.instance.DestroyObject(this);
+    }
+
+    public void Use()
+    {
+        Debug.Log("Using item: " + itemID);
     }
 }
