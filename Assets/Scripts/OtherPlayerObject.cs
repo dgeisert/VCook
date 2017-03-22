@@ -53,9 +53,7 @@ public class OtherPlayerObject : MonoBehaviour {
 		}
 	}
 
-	public void GrabObject(ItemMachine im, int hand){
-        im.sendRelease = true;
-        im.isKinematic = true;
+	public void GrabObject(ItemMachine im, int hand = 0){
         switch (hand) {
 		case 2:
             im.transform.SetParent(head);
@@ -86,6 +84,9 @@ public class OtherPlayerObject : MonoBehaviour {
 		default:
 			break;
         }
+        im.sendRelease = true;
+        im.isKinematic = true;
+        im.rb.isKinematic = true;
     }
 
 	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel, bool isMine = false)
