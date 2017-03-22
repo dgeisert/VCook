@@ -91,6 +91,8 @@ public class OtherPlayerObject : MonoBehaviour {
 	public void ReleaseObject(ItemMachine im, Vector3 pos, Quaternion rot, Vector3 vel, Vector3 angvel, bool isMine = false)
     {
         im.transform.SetParent(null);
+        im.rb.isKinematic = false;
+        im.isKinematic = false;
 		im.transform.position = pos;
 		im.transform.rotation = rot;
 		im.rb.velocity = vel;

@@ -65,15 +65,18 @@ public class ItemMachine : VRTK_InteractableObject {
 		ItemMachine im = col.collider.GetComponentInParent<ItemMachine> ();
 		if (im != null)
         {
-            //audio.clip = defaultClip;
+            audio.clip = defaultClip;
             foreach(KeyValuePair<ItemMachine, AudioClip> kvp in specialtyClips)
             {
                 if (im.itemName == kvp.Key.itemName)
                 {
-                    //audio.clip = kvp.Value;
+                    audio.clip = kvp.Value;
                 }
             }
-            //audio.Play();
+            if(audio.clip != null)
+            {
+                audio.Play();
+            }
             RecipeManager.instance.RecipeOutput(this, im);
             if (this.transformationType != TransformationType.None)
             {
