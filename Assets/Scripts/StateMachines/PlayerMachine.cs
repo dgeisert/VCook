@@ -80,7 +80,7 @@ public class PlayerMachine : MonoBehaviour {
 		if (NetworkManager.instance.allObjects.ContainsKey (SetID)) {
 			return null;
 		}
-		if ((NetworkManager.instance.IsInLobby() && NetworkManager.instance.IsHost ()) || fromHost || !NetworkManager.instance.IsInLobby()) {
+		else if ((NetworkManager.instance.IsInLobby() && NetworkManager.instance.IsHost ()) || fromHost || !NetworkManager.instance.IsInLobby()) {
 			GameObject go = (GameObject)GameObject.Instantiate (baseItem);
 			ItemMachine im = go.GetComponent<ItemMachine> ();
 			if (SetID != "") {
@@ -88,6 +88,7 @@ public class PlayerMachine : MonoBehaviour {
 					im.SetID (SetID);
 				}
 			} else {
+                im.itemID = "";
 				im.Init ();
 			}
 			Transform t = im.transform;
